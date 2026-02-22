@@ -1,20 +1,19 @@
 package com.example.addon;
 
-import meteordevelopment.meteorclient.addons.MeteorAddon;
-import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.item.Items;
+import meteordevelopment.meteorclient.addons.Addon;
 
-public class AddonTemplate extends MeteorAddon {
-    public static final Category CATEGORY = new Category("Mace", Items.MACE.getDefaultStack());
+import com.example.addon.modules.AxeMaceStun;
 
-    @Override
-    public void onInitialize() {
-        Modules.get().add(new com.example.addon.modules.AxeMaceStun());
+public class AddonTemplate extends Addon {
+
+    public AddonTemplate() {
+        super();
     }
 
     @Override
-    public String getPackage() {
-        return "com.example.addon";
+    public void onInitialize() {
+        // Register your module in the Combat category
+        Modules.get().add(new AxeMaceStun());
     }
 }
