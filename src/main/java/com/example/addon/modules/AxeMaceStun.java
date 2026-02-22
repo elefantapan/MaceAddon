@@ -9,9 +9,11 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.entity.LivingEntity;
 
 public class AxeMaceStun extends Module {
     private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
@@ -51,18 +53,21 @@ public class AxeMaceStun extends Module {
     @EventHandler
     private void onAttack(AttackEntityEvent event) {
         if (mc.player == null || mc.world == null) return;
-
+    
         String heldItemId = mc.player.getMainHandStack().getItem().toString();
         boolean isAxe = heldItemId.contains("_axe");
-
-        if (isAxe && mc.crosshairTarget instanceof LivingEntity target) {
-            boolean shieldUp = target.getActiveItem().getItem() == Items.SHIELD;
-            if (shieldUp) {
-                pendingTarget = target;
-
-                // Calculate plus-minus spread delay
-                int variation = mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
-                ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
+    
+        HitResult crosshairTarget = mc.crosshairTarget;
+        if (isAxe && crosshairTarget instanceof EntityHitResult entityHit) {
+            if (entityHit.getEntity() instanceof LivingEntity target) {
+                boolean shieldUp = target.getActiveItem().getItem() == Items.SHIELD;
+                if (shieldUp) {
+                    pendingTarget = target;
+    
+                    // Calculate plus-minus spread delay
+                    int variation = mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
+                    ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
+                }
             }
         }
     }
