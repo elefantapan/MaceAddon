@@ -1,19 +1,17 @@
 package com.example.addon;
 
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.addons.Addon;
-
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Category;
 import com.example.addon.modules.AxeMaceStun;
 
-public class AddonTemplate extends Addon {
+public class AddonTemplate {
 
-    public AddonTemplate() {
-        super();
-    }
+    // Custom category (optional, otherwise use Category.Combat)
+    public static final Category CATEGORY = new Category("Custom Combat");
 
-    @Override
     public void onInitialize() {
-        // Register your module in the Combat category
-        Modules.get().add(new AxeMaceStun());
+        // Register your modules
+        Modules.add(new AxeMaceStun());
     }
 }
