@@ -1,5 +1,6 @@
 package com.example.addon.modules;
 
+import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -127,7 +128,7 @@ public class AxeMaceStun extends Module {
             }
         }
 
-        if (swapBack.get()) prevSlot = mc.player.getInventory().selectedSlot;
+        if (swapBack.get()) prevSlot = InvUtils.getSelectedSlot();
 
         if (autoSwap.get()) {
             int breachMaceSlot = findBreachMace();
