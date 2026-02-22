@@ -37,7 +37,7 @@ public class AxeMaceStun extends Module {
     private boolean pendingSlam = false;
 
     public AxeMaceStun() {
-        super(Category.Combat, "axe-mace-stun", "Auto mace slam after axe shield hit.");
+        super(com.example.addon.AddonTemplate.CATEGORY, "axe-mace-stun", "Auto mace slam after axe shield hit.");
     }
 
     // Detect axe hit on shield
