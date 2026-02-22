@@ -1,6 +1,5 @@
-package com.nnpg.glazed.modules.pvp;
+package com.example.addon.modules;
 
-import com.nnpg.glazed.GlazedAddon;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -8,17 +7,19 @@ import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.item.ItemStack;
 
 public class AxeMaceSwap extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<Boolean> autoSwap = sgGeneral.add(new BoolSetting.Builder()
         .name("auto-swap-breach-mace")
         .description("Automatically finds and swaps to a breach mace.")
         .defaultValue(true)
         .build());
+
     private final Setting<Integer> targetSlot = sgGeneral.add(new IntSetting.Builder()
         .name("target-slot")
         .description("The hotbar slot to swap to when attacking.")
@@ -27,6 +28,7 @@ public class AxeMaceSwap extends Module {
         .min(1)
         .visible(() -> !autoSwap.get())
         .build());
+
     private final Setting<Boolean> debugMode = sgGeneral.add(new BoolSetting.Builder()
         .name("debug")
         .description("Print debug messages in chat.")
@@ -58,11 +60,21 @@ public class AxeMaceSwap extends Module {
         .description("Swap back to the original slot after a short delay.")
         .defaultValue(true)
         .build());
-    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder().name("swap-back-delay").description("Delay in ticks before swapping back to the previous slot.").sliderRange(1, 20).defaultValue(8).min(1).visible(swapBack::get).build());
+
+    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
+        .name("swap-back-delay")
+        .description("Delay in ticks before swapping back to the previous slot.")
+        .sliderRange(1, 20)
+        .defaultValue(8)
+        .min(1)
+        .visible(swapBack::get)
+        .build());
+
     private int prevSlot = -1;
     private int dDelay = 0;
-    public BreachSwap() {
-        super(GlazedAddon.pvp, "breach-swap", "Swaps with the breach mace in a target slot on attack");
+
+    public AxeMaceSwap() {
+        super(Category.COMBAT, "breach-swap", "Swaps with the breach mace in a target slot on attack");
     }
 
     private int findBreachMace() {
@@ -71,18 +83,16 @@ public class AxeMaceSwap extends Module {
 
         // Search through hotbar for items with Breach enchantment
         for (int i = 0; i < 9; i++) {
-            var stack = mc.player.getInventory().getStack(i);
+            ItemStack stack = mc.player.getInventory().getStack(i);
             if (!stack.isEmpty()) {
-                var enchantInfo = stack.getEnchantments();
-                String enchantString = enchantInfo.toString();
-                if (debugMode.get()) info("Slot " + i + " enchants: " + enchantString);
+                var enchantInfo = stack.getEnchantments().toString();
+                if (debugMode.get()) info("Slot " + i + " enchants: " + enchantInfo);
 
-                if (enchantString.contains("minecraft:breach")) {
+                if (enchantInfo.contains("minecraft:breach")) {
                     try {
-                        // Find the number after the =>
-                        int levelStart = enchantString.lastIndexOf("=>");
+                        int levelStart = enchantInfo.lastIndexOf("=>");
                         if (levelStart != -1) {
-                            String levelStr = enchantString.substring(levelStart + 2).replaceAll("[^0-9]", "");
+                            String levelStr = enchantInfo.substring(levelStart + 2).replaceAll("[^0-9]", "");
                             int level = Integer.parseInt(levelStr);
                             if (debugMode.get()) info("Found breach level " + level + " in slot " + i);
                             if (level > highestLevel) {
@@ -96,11 +106,8 @@ public class AxeMaceSwap extends Module {
                 }
             }
         }
-        if (bestSlot != -1) {
-            if (debugMode.get()) info("Selected slot " + bestSlot + " with level " + highestLevel);
-        } else {
-            if (debugMode.get()) warning("No breach mace found");
-        }
+
+        if (bestSlot != -1 && debugMode.get()) info("Selected slot " + bestSlot + " with level " + highestLevel);
         return bestSlot;
     }
 
@@ -113,32 +120,25 @@ public class AxeMaceSwap extends Module {
             String heldItemId = mc.player.getMainHandStack().getItem().toString();
             boolean isSword = heldItemId.contains("sword");
             boolean isAxe = heldItemId.contains("_axe");
-            
+
             if ((!allowSword.get() || !isSword) && (!allowAxe.get() || !isAxe)) {
                 if (debugMode.get()) info("Not holding selected weapon type");
                 return;
             }
         }
-        
-        if (swapBack.get()) {
-            // PlayerInventory no longer exposes getSelectedSlot(); use the selectedSlot field instead
-            prevSlot = com.nnpg.glazed.utils.InventoryUtils.getSelectedSlot(mc.player.getInventory());
-        }
+
+        if (swapBack.get()) prevSlot = mc.player.getInventory().selectedSlot;
 
         if (autoSwap.get()) {
-            // Find breach mace in hotbar
             int breachMaceSlot = findBreachMace();
-            if (breachMaceSlot != -1) {
-                InvUtils.swap(breachMaceSlot, false);
-            }
+            if (breachMaceSlot != -1) InvUtils.swap(breachMaceSlot, false);
         } else {
             InvUtils.swap(targetSlot.get() - 1, false);
         }
 
-        if (swapBack.get() && prevSlot != -1) {
-            dDelay = delay.get();
-        }
+        if (swapBack.get() && prevSlot != -1) dDelay = delay.get();
     }
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (dDelay > 0) {
