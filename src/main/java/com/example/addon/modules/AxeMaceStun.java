@@ -42,14 +42,13 @@ public class AxeMaceStun extends Module {
     private void onAttack(AttackEntityEvent event) {
         if (!(event.entity instanceof PlayerEntity target)) return;
         if (mc.player == null) return;
-
         if (!(mc.player.getMainHandStack().getItem() instanceof AxeItem)) return;
         if (!target.isBlocking()) return;
 
         int maceSlot = findMaceSlot();
         if (maceSlot == -1) return;
 
-        previousSlot = mc.player.getInventory().selectedSlot; // getter via Mixin or helper
+        previousSlot = mc.player.getInventory().getSelectedSlot();
         delayTicks = swapDelay.get() / 50;
         pendingSlam = true;
     }
@@ -69,7 +68,7 @@ public class AxeMaceStun extends Module {
             return;
         }
 
-        mc.player.getInventory().selectedSlot = maceSlot; // setter via Mixin/helper
+        mc.player.getInventory().setSelectedSlot(maceSlot);
 
         if (mc.targetedEntity != null) {
             mc.interactionManager.attackEntity(mc.player, mc.targetedEntity);
@@ -77,7 +76,7 @@ public class AxeMaceStun extends Module {
         }
 
         if (swapBack.get()) {
-            mc.player.getInventory().selectedSlot = previousSlot; // setter via Mixin/helper
+            mc.player.getInventory().setSelectedSlot(previousSlot);
         }
 
         pendingSlam = false;
