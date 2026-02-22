@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.ItemStack;
 
-public class AxeMaceSwap extends Module {
+public class AxeMaceStun extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Boolean> autoSwap = sgGeneral.add(new BoolSetting.Builder()
@@ -73,7 +73,7 @@ public class AxeMaceSwap extends Module {
     private int prevSlot = -1;
     private int dDelay = 0;
 
-    public AxeMaceSwap() {
+    public AxeMaceStun() {
         super(Category.COMBAT, "breach-swap", "Swaps with the breach mace in a target slot on attack");
     }
 
