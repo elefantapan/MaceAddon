@@ -1,86 +1,93 @@
-package com.example.modules;
+package com.example.addon.modules;
 
-import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
-import meteordevelopment.meteorclient.events.entity.player.DoAttackEvent;
-import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.AxeItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.MaceItem;
 
-import java.util.Random;
+import net.minecraft.entity.Entity;
+import net.minecraft.item.Items;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.hit.EntityHitResult;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class AxeMaceStun extends Module {
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Integer> delayTicks = sgGeneral.add(new IntSetting.Builder()
+    private final IntSetting delayTicks = this.settings.add(new IntSetting.Builder()
         .name("delay-ticks")
-        .description("Base delay before swapping to Mace (1-10 ticks).")
-        .defaultValue(3)
-        .range(1, 10)
-        .sliderRange(1, 10)
+        .description("Ticks to wait before swapping to mace and hitting again")
+        .defaultValue(5)
+        .min(1)
+        .max(10)
+        .sliderMin(1)
+        .sliderMax(10)
         .build()
     );
 
-    private final Setting<Integer> spread = sgGeneral.add(new IntSetting.Builder()
-        .name("spread")
-        .description("Adds random +- ticks to delay to make swaps less perfect.")
+    private final IntSetting spreadTicks = this.settings.add(new IntSetting.Builder()
+        .name("spread-ticks")
+        .description("Random +/- ticks added to the delay to make it less perfect")
         .defaultValue(0)
-        .range(0, 5)
-        .sliderRange(0, 5)
+        .min(0)
+        .max(5)
+        .sliderMin(0)
+        .sliderMax(5)
         .build()
     );
 
+    private boolean awaitingSwap = false;
     private int timer = 0;
     private int targetSlot = -1;
-    private boolean awaitingSwap = false;
-    private final Random random = new Random();
 
     public AxeMaceStun() {
-        super(Categories.Combat, "axe-to-mace", "Swaps from Axe to Mace after hitting.");
+        super(AddonTemplate.CATEGORY, "axe-mace-stun", "Swaps to mace after hitting with an axe and hits again");
     }
 
     @Override
-    public void onDeactivate() {
-        timer = 0;
+    public void onActivate() {
         awaitingSwap = false;
+        timer = 0;
         targetSlot = -1;
     }
 
     @EventHandler
-    private void onAttack(DoAttackEvent event) {
-        ItemStack main = mc.player.getMainHandStack();
-        if (!(main.getItem() instanceof AxeItem)) return;
-
-        // Find a Mace in hotbar
-        int maceSlot = InvUtils.findInHotbar(item -> item.getItem() instanceof MaceItem).slot();
-        if (maceSlot == -1) return;
-
-        targetSlot = maceSlot;
-
-        // Calculate randomized delay
-        int randomSpread = (spread.get() > 0) ? random.nextInt(spread.get() * 2 + 1) - spread.get() : 0;
-        timer = delayTicks.get() + randomSpread;
-        awaitingSwap = true;
-    }
-
-    @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (!awaitingSwap || targetSlot == -1) return;
+        if (!awaitingSwap) return;
 
         timer--;
         if (timer <= 0) {
-            // Swap to Mace
-            InvUtils.swap(targetSlot, false);
-            // Attack immediately after swap
-            mc.interactionManager.attackEntity(mc.player, mc.crosshairTarget.getType() == null ? null : (Entity) mc.crosshairTarget);
+            // Swap to Mace slot
+            if (targetSlot != -1) InvUtils.swap(targetSlot, false);
+
+            // Attack target again if valid
+            HitResult target = mc.crosshairTarget;
+            if (target instanceof EntityHitResult entityHit) {
+                mc.interactionManager.attackEntity(mc.player, entityHit.getEntity());
+            }
+
             awaitingSwap = false;
             targetSlot = -1;
         }
+    }
+
+    @Override
+    public void onAttack(Entity target) {
+        if (mc.player == null || mc.world == null) return;
+
+        // Only trigger if holding an axe
+        if (mc.player.getMainHandStack().getItem() != Items.IRON_AXE &&
+            mc.player.getMainHandStack().getItem() != Items.DIAMOND_AXE &&
+            mc.player.getMainHandStack().getItem() != Items.NETHERITE_AXE) return;
+
+        // Find Mace slot (example: pick any slot with sword)
+        targetSlot = InvUtils.findItemSlot(Items.IRON_AXE); // replace with your "mace" item
+        if (targetSlot == -1) return;
+
+        // Calculate timer with spread
+        int delay = delayTicks.get() + ThreadLocalRandom.current().nextInt(-spreadTicks.get(), spreadTicks.get() + 1);
+        timer = Math.max(1, delay); // min 1 tick
+
+        awaitingSwap = true;
     }
 }
