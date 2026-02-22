@@ -41,7 +41,7 @@ public class AxeMaceStun extends Module {
     private boolean awaitingSwap = false;
     private final Random random = new Random();
 
-    public AxeToMaceSwap() {
+    public AxeMaceStun() {
         super(Categories.Combat, "axe-to-mace", "Swaps from Axe to Mace after hitting.");
     }
 
