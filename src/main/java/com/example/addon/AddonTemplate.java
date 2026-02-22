@@ -1,14 +1,16 @@
 package com.example.addon;
 
-import com.example.addon.modules.AxeMaceStun;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.item.Items;
 
 public class AddonTemplate extends MeteorAddon {
+    public static final Category CATEGORY = new Category("Mace", Items.MACE.getDefaultStack());
 
     @Override
     public void onInitialize() {
-        Modules.get().add(new AxeMaceStun());
+        Modules.get().add(new com.example.addon.modules.AxeMaceStun());
     }
 
     @Override
