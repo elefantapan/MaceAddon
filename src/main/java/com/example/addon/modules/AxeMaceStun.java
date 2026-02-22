@@ -1,152 +1,85 @@
 package com.example.addon.modules;
 
-import meteordevelopment.meteorclient.systems.modules.Category;
+import com.example.addon.AddonTemplate;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.item.ItemStack;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
 
 public class AxeMaceStun extends Module {
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
 
-    private final Setting<Boolean> autoSwap = sgGeneral.add(new BoolSetting.Builder()
-        .name("auto-swap-breach-mace")
-        .description("Automatically finds and swaps to a breach mace.")
-        .defaultValue(true)
-        .build());
-
+    // Settings
     private final Setting<Integer> targetSlot = sgGeneral.add(new IntSetting.Builder()
-        .name("target-slot")
-        .description("The hotbar slot to swap to when attacking.")
-        .sliderRange(1, 9)
-        .defaultValue(1)
-        .min(1)
-        .visible(() -> !autoSwap.get())
-        .build());
+            .name("target-slot")
+            .description("The hotbar slot to swap to when attacking.")
+            .sliderRange(1, 9)
+            .defaultValue(1)
+            .build());
 
-    private final Setting<Boolean> debugMode = sgGeneral.add(new BoolSetting.Builder()
-        .name("debug")
-        .description("Print debug messages in chat.")
-        .defaultValue(false)
-        .build());
+    private final Setting<Integer> delayTicks = sgGeneral.add(new IntSetting.Builder()
+            .name("delay-ticks")
+            .description("Base ticks to wait before swapping to mace.")
+            .defaultValue(3)
+            .min(1)
+            .max(20)
+            .build());
 
-    private final Setting<Boolean> checkWeapon = sgGeneral.add(new BoolSetting.Builder()
-        .name("check-weapon")
-        .description("Only activate when holding a sword or axe.")
-        .defaultValue(true)
-        .build());
+    private final Setting<Integer> spreadTicks = sgGeneral.add(new IntSetting.Builder()
+            .name("spread-ticks")
+            .description("Maximum random variation (+/-) added to delay.")
+            .defaultValue(0)
+            .min(0)
+            .max(10)
+            .build());
 
-    private final Setting<Boolean> allowSword = sgGeneral.add(new BoolSetting.Builder()
-        .name("allow-sword")
-        .description("Allow activation when holding a sword.")
-        .defaultValue(true)
-        .visible(checkWeapon::get)
-        .build());
-
-    private final Setting<Boolean> allowAxe = sgGeneral.add(new BoolSetting.Builder()
-        .name("allow-axe")
-        .description("Allow activation when holding an axe.")
-        .defaultValue(true)
-        .visible(checkWeapon::get)
-        .build());
-
-    private final Setting<Boolean> swapBack = sgGeneral.add(new BoolSetting.Builder()
-        .name("swap-back")
-        .description("Swap back to the original slot after a short delay.")
-        .defaultValue(true)
-        .build());
-
-    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
-        .name("swap-back-delay")
-        .description("Delay in ticks before swapping back to the previous slot.")
-        .sliderRange(1, 20)
-        .defaultValue(8)
-        .min(1)
-        .visible(swapBack::get)
-        .build());
-
-    private int prevSlot = -1;
-    private int dDelay = 0;
+    // Pending attack info
+    private LivingEntity pendingTarget = null;
+    private int ticksUntilAttack = 0;
 
     public AxeMaceStun() {
-        super(Category.COMBAT, "breach-swap", "Swaps with the breach mace in a target slot on attack");
-    }
-
-    private int findBreachMace() {
-        int bestSlot = -1;
-        int highestLevel = 0;
-
-        // Search through hotbar for items with Breach enchantment
-        for (int i = 0; i < 9; i++) {
-            ItemStack stack = mc.player.getInventory().getStack(i);
-            if (!stack.isEmpty()) {
-                var enchantInfo = stack.getEnchantments().toString();
-                if (debugMode.get()) info("Slot " + i + " enchants: " + enchantInfo);
-
-                if (enchantInfo.contains("minecraft:breach")) {
-                    try {
-                        int levelStart = enchantInfo.lastIndexOf("=>");
-                        if (levelStart != -1) {
-                            String levelStr = enchantInfo.substring(levelStart + 2).replaceAll("[^0-9]", "");
-                            int level = Integer.parseInt(levelStr);
-                            if (debugMode.get()) info("Found breach level " + level + " in slot " + i);
-                            if (level > highestLevel) {
-                                highestLevel = level;
-                                bestSlot = i;
-                            }
-                        }
-                    } catch (Exception e) {
-                        if (debugMode.get()) error("Error parsing level: " + e.getMessage());
-                    }
-                }
-            }
-        }
-
-        if (bestSlot != -1 && debugMode.get()) info("Selected slot " + bestSlot + " with level " + highestLevel);
-        return bestSlot;
+        super(AddonTemplate.CATEGORY, "auto-stunslam", "Automatically stunslam with delay and variation");
     }
 
     @EventHandler
     private void onAttack(AttackEntityEvent event) {
         if (mc.player == null || mc.world == null) return;
 
-        // Check if we're holding a valid weapon when weapon checking is enabled
-        if (checkWeapon.get()) {
-            String heldItemId = mc.player.getMainHandStack().getItem().toString();
-            boolean isSword = heldItemId.contains("sword");
-            boolean isAxe = heldItemId.contains("_axe");
+        String heldItemId = mc.player.getMainHandStack().getItem().toString();
+        boolean isAxe = heldItemId.contains("_axe");
 
-            if ((!allowSword.get() || !isSword) && (!allowAxe.get() || !isAxe)) {
-                if (debugMode.get()) info("Not holding selected weapon type");
-                return;
+        if (isAxe && mc.crosshairTarget instanceof LivingEntity target) {
+            boolean shieldUp = target.getActiveItem().getItem() == Items.SHIELD;
+            if (shieldUp) {
+                pendingTarget = target;
+
+                // Calculate plus-minus spread delay
+                int variation = mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
+                ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
             }
         }
-
-        if (swapBack.get()) prevSlot = InvUtils.getSelectedSlot();
-
-        if (autoSwap.get()) {
-            int breachMaceSlot = findBreachMace();
-            if (breachMaceSlot != -1) InvUtils.swap(breachMaceSlot, false);
-        } else {
-            InvUtils.swap(targetSlot.get() - 1, false);
-        }
-
-        if (swapBack.get() && prevSlot != -1) dDelay = delay.get();
     }
 
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
-        if (dDelay > 0) {
-            dDelay--;
-            if (dDelay == 0 && prevSlot != -1) {
-                InvUtils.swap(prevSlot, false);
-                prevSlot = -1;
+    private void onTick(TickEvent.Post event) {
+        if (ticksUntilAttack > 0) {
+            ticksUntilAttack--;
+
+            if (ticksUntilAttack == 0 && pendingTarget != null) {
+                int maceSlot = targetSlot.get();
+                InvUtils.swap(maceSlot, false);
+                mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                mc.player.swingHand(Hand.MAIN_HAND);
+
+                // Reset
+                pendingTarget = null;
             }
         }
     }
