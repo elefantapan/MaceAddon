@@ -137,8 +137,8 @@ public class AxeMaceStun extends Module {
     private void tryScheduleAttack(LivingEntity target) {
         if (pendingTarget != null) return;
         if (target.getActiveItem().getItem() != Items.SHIELD) return;
-        if (mc.player.getVelocity().y >= 0) return;        // still must be falling down
-        if (mc.player.fallDistance < 1.5f) return;        // must be falling at least 1.5 blocks
+        // Only schedule if actually falling
+        if (mc.player.isOnGround()) return; // <-- this is more reliable
         
         pendingTarget = target;
 
