@@ -119,13 +119,15 @@ public class AxeMaceStun extends Module {
         if (pendingTarget != null) return;
 
         if (target.getActiveItem().getItem() != Items.SHIELD) return;
-
-        pendingTarget = target;
+        
+        if (mc.player.getVelocity().y < 0) {
+            pendingTarget = target;
 
         int variation = spreadTicks.get() == 0
             ? 0
             : mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
 
         ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
+        }
     }
 }
