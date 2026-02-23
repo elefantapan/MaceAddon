@@ -88,56 +88,27 @@ public class AxeMaceStun extends Module {
                 if (ehr.getEntity() instanceof LivingEntity target) {
                     double reach = mc.player.getEntityInteractionRange();
                     if (mc.player.distanceTo(target) <= reach) {
-                        tryScheduleAttack(target);
+                        if(pendingTarget != null) {
+                            mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                            mc.player.swingHand(Hand.MAIN_HAND);
+                            tryScheduleAttack(target);
+                        }
                     }
                 }
             }
         }
 
-        // COUNTDOWN
+        // DELAYED ATTACK
         if (ticksUntilAttack > 0) {
             ticksUntilAttack--;
 
-            if (ticksUntilAttack == 0) {
-                performAttackSafely();
+            if (ticksUntilAttack == 0 && pendingTarget != null) {
+                InvUtils.swap(targetSlot.get(), false);
+                mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                mc.player.swingHand(Hand.MAIN_HAND);
+                pendingTarget = null;
             }
         }
-    }
-
-    // =========================
-    // SAFE ATTACK
-    // =========================
-    private void performAttackSafely() {
-        if (mc.player == null || mc.world == null) {
-            reset();
-            return;
-        }
-
-        if (pendingTarget == null) {
-            reset();
-            return;
-        }
-
-        if (!pendingTarget.isAlive() || pendingTarget.isRemoved()) {
-            reset();
-            return;
-        }
-
-        if (pendingTarget.getWorld() != mc.world) {
-            reset();
-            return;
-        }
-
-        InvUtils.swap(targetSlot.get(), false);
-        mc.interactionManager.attackEntity(mc.player, pendingTarget);
-        mc.player.swingHand(Hand.MAIN_HAND);
-
-        reset();
-    }
-
-    private void reset() {
-        pendingTarget = null;
-        ticksUntilAttack = 0;
     }
 
     // =========================
@@ -149,15 +120,17 @@ public class AxeMaceStun extends Module {
 
     private void tryScheduleAttack(LivingEntity target) {
         if (pendingTarget != null) return;
-        if (!target.isAlive()) return;
-        if (target.getActiveItem().getItem() != Items.SHIELD) return;
 
-        pendingTarget = target;
+        if (target.getActiveItem().getItem() != Items.SHIELD) return;
+        
+        if (mc.player.getVelocity().y < 0) {
+            pendingTarget = target;
 
         int variation = spreadTicks.get() == 0
             ? 0
             : mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
 
         ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
+        }
     }
 }
