@@ -89,8 +89,10 @@ public class AxeMaceStun extends Module {
                         double reach = mc.player.getEntityInteractionRange();
                         if (mc.player.distanceTo(target) <= reach) {
                             if (target.getActiveItem().getItem() == Items.SHIELD) {
-                                mc.interactionManager.attackEntity(mc.player, pendingTarget);
-                                mc.player.swingHand(Hand.MAIN_HAND);
+                                if (pendingTarget != null) { // <-- add this
+                                    mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                                    mc.player.swingHand(Hand.MAIN_HAND);
+                                }
                                 tryScheduleAttack(target);
                             }
                         }
