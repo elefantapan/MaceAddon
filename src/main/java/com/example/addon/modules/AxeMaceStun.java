@@ -1,4 +1,4 @@
-package com.example.addon.modules;
+cpackage com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
@@ -93,6 +93,8 @@ public class AxeMaceStun extends Module {
                                     mc.interactionManager.attackEntity(mc.player, pendingTarget);
                                     mc.player.swingHand(Hand.MAIN_HAND);
                                 }
+                                mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                                mc.player.swingHand(Hand.MAIN_HAND)
                                 tryScheduleAttack(target);
                             }
                         }
