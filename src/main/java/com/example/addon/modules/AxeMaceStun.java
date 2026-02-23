@@ -94,7 +94,7 @@ public class AxeMaceStun extends Module {
                                     mc.player.swingHand(Hand.MAIN_HAND);
                                 }
                                 mc.interactionManager.attackEntity(mc.player, pendingTarget);
-                                mc.player.swingHand(Hand.MAIN_HAND)
+                                mc.player.swingHand(Hand.MAIN_HAND);
                                 tryScheduleAttack(target);
                             }
                         }
