@@ -89,6 +89,8 @@ public class AxeMaceStun extends Module {
                         double reach = mc.player.getEntityInteractionRange();
                         if (mc.player.distanceTo(target) <= reach) {
                             if (target.getActiveItem().getItem() == Items.SHIELD) {
+                                mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                                mc.player.swingHand(Hand.MAIN_HAND);
                                 tryScheduleAttack(target);
                             }
                         }
@@ -120,8 +122,9 @@ public class AxeMaceStun extends Module {
     private void tryScheduleAttack(LivingEntity target) {
         if (pendingTarget != null) return;
         if (target.getActiveItem().getItem() != Items.SHIELD) return;
-        if (mc.player.getVelocity().y >= 0) return;
-
+        if (mc.player.getVelocity().y >= 0) return;        // still must be falling down
+        if (mc.player.fallDistance < 1.5f) return;        // must be falling at least 1.5 blocks
+        
         pendingTarget = target;
 
         int variation = spreadTicks.get() == 0
