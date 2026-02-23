@@ -85,18 +85,16 @@ public class AxeMaceStun extends Module {
         // AUTO HIT WITH AXE
         // -------------------
         if (autoHit.get() && pendingTarget == null) {
+            if (mc.player.isOnGround()) return; // skip if on ground
+        
             if (mc.player.getMainHandStack().getItem() instanceof AxeItem) {
                 if (mc.crosshairTarget instanceof EntityHitResult ehr) {
                     if (ehr.getEntity() instanceof LivingEntity target) {
                         double reach = mc.player.getEntityInteractionRange();
                         if (mc.player.distanceTo(target) <= reach) {
-                            // Only hit shielded targets
                             if (target.getActiveItem().getItem() == Items.SHIELD) {
-                                // Step 1: hit with axe immediately
                                 mc.interactionManager.attackEntity(mc.player, target);
                                 mc.player.swingHand(Hand.MAIN_HAND);
-    
-                                // Step 2: schedule delayed swap + hit with mace
                                 tryScheduleAttack(target);
                             }
                         }
