@@ -60,11 +60,11 @@ public class AxeMaceStun extends Module {
 
     public AxeMaceStun() {
         super(AddonTemplate.CATEGORY, "auto-stunslam",
-            "Automatically swaps to mace and stuns shielded targets with optional auto-hit.");
+            "Automatically swaps to mace and stuns shielded targets.");
     }
 
     // =========================
-    // MANUAL ATTACK TRIGGER
+    // MANUAL ATTACK
     // =========================
     @EventHandler
     private void onAttack(AttackEntityEvent event) {
@@ -76,7 +76,7 @@ public class AxeMaceStun extends Module {
     }
 
     // =========================
-    // TICK LOGIC
+    // TICK
     // =========================
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -86,7 +86,8 @@ public class AxeMaceStun extends Module {
         if (autoHit.get() && pendingTarget == null && isHoldingAxe()) {
             if (mc.crosshairTarget instanceof EntityHitResult ehr) {
                 if (ehr.getEntity() instanceof LivingEntity target) {
-                    double reach = mc.interactionManager.getReachDistance();
+
+                    double reach = mc.player.getEntityInteractionRange();
                     if (mc.player.distanceTo(target) <= reach) {
                         tryScheduleAttack(target);
                     }
@@ -94,7 +95,7 @@ public class AxeMaceStun extends Module {
             }
         }
 
-        // DELAYED MACE ATTACK
+        // DELAYED ATTACK
         if (ticksUntilAttack > 0) {
             ticksUntilAttack--;
 
@@ -117,8 +118,7 @@ public class AxeMaceStun extends Module {
     private void tryScheduleAttack(LivingEntity target) {
         if (pendingTarget != null) return;
 
-        boolean shieldUp = target.getActiveItem().getItem() == Items.SHIELD;
-        if (!shieldUp) return;
+        if (target.getActiveItem().getItem() != Items.SHIELD) return;
 
         pendingTarget = target;
 
