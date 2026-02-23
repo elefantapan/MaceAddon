@@ -1,4 +1,4 @@
-cpackage com.example.addon.modules;
+package com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
@@ -80,21 +80,23 @@ public class AxeMaceStun extends Module {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (mc.player == null || mc.world == null) return;
-
-        // AUTO HIT
+    
+        // -------------------
+        // AUTO HIT WITH AXE
+        // -------------------
         if (autoHit.get() && pendingTarget == null) {
             if (mc.player.getMainHandStack().getItem() instanceof AxeItem) {
                 if (mc.crosshairTarget instanceof EntityHitResult ehr) {
                     if (ehr.getEntity() instanceof LivingEntity target) {
                         double reach = mc.player.getEntityInteractionRange();
                         if (mc.player.distanceTo(target) <= reach) {
+                            // Only hit shielded targets
                             if (target.getActiveItem().getItem() == Items.SHIELD) {
-                                if (pendingTarget != null) { // <-- add this
-                                    mc.interactionManager.attackEntity(mc.player, pendingTarget);
-                                    mc.player.swingHand(Hand.MAIN_HAND);
-                                }
-                                mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                                // Step 1: hit with axe immediately
+                                mc.interactionManager.attackEntity(mc.player, target);
                                 mc.player.swingHand(Hand.MAIN_HAND);
+    
+                                // Step 2: schedule delayed swap + hit with mace
                                 tryScheduleAttack(target);
                             }
                         }
@@ -102,20 +104,25 @@ public class AxeMaceStun extends Module {
                 }
             }
         }
-
-        // DELAYED ATTACK
-        // DELAYED ATTACK
+    
+        // -------------------
+        // DELAYED ATTACK WITH MACE
+        // -------------------
         if (ticksUntilAttack > 0) {
             ticksUntilAttack--;
-        
-            if (ticksUntilAttack == 0 && pendingTarget != null && mc.player != null && mc.world != null) {
-                // Make sure target still exists in world
+    
+            if (ticksUntilAttack == 0 && pendingTarget != null) {
+                // Make sure target still exists in the world
                 if (pendingTarget.isAlive()) {
+                    // Swap to mace (targetSlot)
                     InvUtils.swap(targetSlot.get(), false);
+    
+                    // Hit with mace
                     mc.interactionManager.attackEntity(mc.player, pendingTarget);
                     mc.player.swingHand(Hand.MAIN_HAND);
                 }
-                pendingTarget = null; // clear pending target anyway
+    
+                pendingTarget = null; // Clear pending target
             }
         }
     }
