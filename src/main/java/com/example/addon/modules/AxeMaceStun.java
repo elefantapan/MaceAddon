@@ -100,14 +100,18 @@ public class AxeMaceStun extends Module {
         }
 
         // DELAYED ATTACK
+        // DELAYED ATTACK
         if (ticksUntilAttack > 0) {
             ticksUntilAttack--;
-
-            if (ticksUntilAttack == 0 && pendingTarget != null) {
-                InvUtils.swap(targetSlot.get(), false);
-                mc.interactionManager.attackEntity(mc.player, pendingTarget);
-                mc.player.swingHand(Hand.MAIN_HAND);
-                pendingTarget = null;
+        
+            if (ticksUntilAttack == 0 && pendingTarget != null && mc.player != null && mc.world != null) {
+                // Make sure target still exists in world
+                if (pendingTarget.isAlive()) {
+                    InvUtils.swap(targetSlot.get(), false);
+                    mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                    mc.player.swingHand(Hand.MAIN_HAND);
+                }
+                pendingTarget = null; // clear pending target anyway
             }
         }
     }
