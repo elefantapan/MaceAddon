@@ -86,9 +86,10 @@ public class AxeMaceStun extends Module {
         if (autoHit.get() && pendingTarget == null && isHoldingAxe()) {
             if (mc.crosshairTarget instanceof EntityHitResult ehr) {
                 if (ehr.getEntity() instanceof LivingEntity target) {
-
                     double reach = mc.player.getEntityInteractionRange();
                     if (mc.player.distanceTo(target) <= reach) {
+                        mc.interactionManager.attackEntity(mc.player, pendingTarget);
+                        mc.player.swingHand(Hand.MAIN_HAND);
                         tryScheduleAttack(target);
                     }
                 }
