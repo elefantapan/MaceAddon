@@ -3,89 +3,129 @@ package com.example.addon.modules;
 import com.example.addon.AddonTemplate;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.entity.LivingEntity;
 
 public class AxeMaceStun extends Module {
-    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    // Settings
+    // SETTINGS
     private final Setting<Integer> targetSlot = sgGeneral.add(new IntSetting.Builder()
-            .name("target-slot")
-            .description("The hotbar slot to swap to when attacking.")
-            .sliderRange(1, 9)
-            .defaultValue(1)
-            .build());
+        .name("target-slot")
+        .description("Hotbar slot to swap to (1–9).")
+        .defaultValue(1)
+        .min(1)
+        .max(9)
+        .sliderRange(1, 9)
+        .build()
+    );
 
     private final Setting<Integer> delayTicks = sgGeneral.add(new IntSetting.Builder()
-            .name("delay-ticks")
-            .description("Base ticks to wait before swapping to mace.")
-            .defaultValue(3)
-            .min(1)
-            .max(20)
-            .build());
+        .name("delay-ticks")
+        .description("Ticks to wait before mace hit.")
+        .defaultValue(3)
+        .min(0)
+        .max(20)
+        .build()
+    );
 
     private final Setting<Integer> spreadTicks = sgGeneral.add(new IntSetting.Builder()
-            .name("spread-ticks")
-            .description("Maximum random variation (+/-) added to delay.")
-            .defaultValue(0)
-            .min(0)
-            .max(10)
-            .build());
+        .name("spread-ticks")
+        .description("Random +/- variation added to delay.")
+        .defaultValue(0)
+        .min(0)
+        .max(10)
+        .build()
+    );
 
-    // Pending attack info
-    private LivingEntity pendingTarget = null;
-    private int ticksUntilAttack = 0;
+    private final Setting<Boolean> autoHit = sgGeneral.add(new BoolSetting.Builder()
+        .name("auto-hit")
+        .description("Automatically trigger stun when looking at a shielded target.")
+        .defaultValue(false)
+        .build()
+    );
+
+    // STATE
+    private LivingEntity pendingTarget;
+    private int ticksUntilAttack;
 
     public AxeMaceStun() {
-        super(AddonTemplate.CATEGORY, "auto-stunslam", "Automatically stunslam with delay and variation");
+        super(AddonTemplate.CATEGORY, "auto-stunslam",
+            "Automatically swaps to mace and stuns shielded targets with optional auto-hit.");
     }
 
+    // =========================
+    // MANUAL ATTACK TRIGGER
+    // =========================
     @EventHandler
     private void onAttack(AttackEntityEvent event) {
         if (mc.player == null || mc.world == null) return;
-    
-        String heldItemId = mc.player.getMainHandStack().getItem().toString();
-        boolean isAxe = heldItemId.contains("_axe");
-    
-        HitResult crosshairTarget = mc.crosshairTarget;
-        if (isAxe && crosshairTarget instanceof EntityHitResult entityHit) {
-            if (entityHit.getEntity() instanceof LivingEntity target) {
-                boolean shieldUp = target.getActiveItem().getItem() == Items.SHIELD;
-                if (shieldUp) {
-                    pendingTarget = target;
-    
-                    // Calculate plus-minus spread delay
-                    int variation = mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
-                    ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
+        if (!(event.entity instanceof LivingEntity target)) return;
+        if (!isHoldingAxe()) return;
+
+        tryScheduleAttack(target);
+    }
+
+    // =========================
+    // TICK LOGIC
+    // =========================
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        if (mc.player == null || mc.world == null) return;
+
+        // AUTO HIT
+        if (autoHit.get() && pendingTarget == null && isHoldingAxe()) {
+            if (mc.crosshairTarget instanceof EntityHitResult ehr) {
+                if (ehr.getEntity() instanceof LivingEntity target) {
+                    double reach = mc.interactionManager.getReachDistance();
+                    if (mc.player.distanceTo(target) <= reach) {
+                        tryScheduleAttack(target);
+                    }
                 }
             }
         }
-    }
 
-    @EventHandler
-    private void onTick(TickEvent.Post event) {
+        // DELAYED MACE ATTACK
         if (ticksUntilAttack > 0) {
             ticksUntilAttack--;
 
             if (ticksUntilAttack == 0 && pendingTarget != null) {
-                int maceSlot = targetSlot.get();
-                InvUtils.swap(maceSlot, false);
+                InvUtils.swap(targetSlot.get(), false);
                 mc.interactionManager.attackEntity(mc.player, pendingTarget);
                 mc.player.swingHand(Hand.MAIN_HAND);
-
-                // Reset
                 pendingTarget = null;
             }
         }
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+    private boolean isHoldingAxe() {
+        return mc.player.getMainHandStack().getItem().toString().contains("_axe");
+    }
+
+    private void tryScheduleAttack(LivingEntity target) {
+        if (pendingTarget != null) return;
+
+        boolean shieldUp = target.getActiveItem().getItem() == Items.SHIELD;
+        if (!shieldUp) return;
+
+        pendingTarget = target;
+
+        int variation = spreadTicks.get() == 0
+            ? 0
+            : mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
+
+        ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
     }
 }
