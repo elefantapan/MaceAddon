@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.AxeItem;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
@@ -18,7 +19,6 @@ import net.minecraft.util.hit.EntityHitResult;
 public class AxeMaceStun extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    // SETTINGS
     private final Setting<Integer> targetSlot = sgGeneral.add(new IntSetting.Builder()
         .name("target-slot")
         .description("Hotbar slot to swap to (1–9).")
@@ -54,7 +54,6 @@ public class AxeMaceStun extends Module {
         .build()
     );
 
-    // STATE
     private LivingEntity pendingTarget;
     private int ticksUntilAttack;
 
@@ -70,7 +69,7 @@ public class AxeMaceStun extends Module {
     private void onAttack(AttackEntityEvent event) {
         if (mc.player == null || mc.world == null) return;
         if (!(event.entity instanceof LivingEntity target)) return;
-        if (!isHoldingAxe()) return;
+        if (!(mc.player.getMainHandStack().getItem() instanceof AxeItem)) return;
 
         tryScheduleAttack(target);
     }
@@ -83,15 +82,15 @@ public class AxeMaceStun extends Module {
         if (mc.player == null || mc.world == null) return;
 
         // AUTO HIT
-        if (autoHit.get() && pendingTarget == null && isHoldingAxe()) {
-            if (mc.crosshairTarget instanceof EntityHitResult ehr) {
-                if (ehr.getEntity() instanceof LivingEntity target) {
-                    double reach = mc.player.getEntityInteractionRange();
-                    if (mc.player.distanceTo(target) <= reach) {
-                        if(pendingTarget != null) {
-                            mc.interactionManager.attackEntity(mc.player, pendingTarget);
-                            mc.player.swingHand(Hand.MAIN_HAND);
-                            tryScheduleAttack(target);
+        if (autoHit.get() && pendingTarget == null) {
+            if (mc.player.getMainHandStack().getItem() instanceof AxeItem) {
+                if (mc.crosshairTarget instanceof EntityHitResult ehr) {
+                    if (ehr.getEntity() instanceof LivingEntity target) {
+                        double reach = mc.player.getEntityInteractionRange();
+                        if (mc.player.distanceTo(target) <= reach) {
+                            if (target.getActiveItem().getItem() == Items.SHIELD) {
+                                tryScheduleAttack(target);
+                            }
                         }
                     }
                 }
@@ -112,7 +111,7 @@ public class AxeMaceStun extends Module {
     }
 
     // =========================
-    // HELPERS
+    // HELPERS (UNCHANGED)
     // =========================
     private boolean isHoldingAxe() {
         return mc.player.getMainHandStack().getItem().toString().contains("_axe");
@@ -120,17 +119,15 @@ public class AxeMaceStun extends Module {
 
     private void tryScheduleAttack(LivingEntity target) {
         if (pendingTarget != null) return;
-
         if (target.getActiveItem().getItem() != Items.SHIELD) return;
-        
-        if (mc.player.getVelocity().y < 0) {
-            pendingTarget = target;
+        if (mc.player.getVelocity().y >= 0) return;
+
+        pendingTarget = target;
 
         int variation = spreadTicks.get() == 0
             ? 0
             : mc.player.getRandom().nextInt(spreadTicks.get() * 2 + 1) - spreadTicks.get();
 
         ticksUntilAttack = Math.max(0, delayTicks.get() + variation);
-        }
     }
 }
