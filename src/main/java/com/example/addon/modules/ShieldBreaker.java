@@ -45,6 +45,7 @@ public class ShieldBreaker extends Module {
         if (!target.isBlocking()) return;
 
         // ✅ All conditions met → attack
-        mc.doAttack();
+        mc.interactionManager.attackEntity(mc.player, target);
+        mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
     }
 }
