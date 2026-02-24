@@ -2,7 +2,7 @@ package com.example.addon;
 
 import com.example.addon.modules.AxeMaceStun;
 import com.example.addon.modules.AutoWind;
-import com.example.addon.modules.BreachSwap;
+import com.example.addon.modules.ShieldBreaker;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -25,7 +25,7 @@ public class AddonTemplate extends MeteorAddon {
         // Modules
         Modules.get().add(new AxeMaceStun());
         Modules.get().add(new AutoWind());
-        Modules.get().add(new BreachSwap());
+        Modules.get().add(new ShieldBreaker());
     }
 
     @Override
