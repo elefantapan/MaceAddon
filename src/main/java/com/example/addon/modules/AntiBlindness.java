@@ -14,7 +14,7 @@ public class AntiBlindness extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public AntiBlindness() {
-        super(Category.Render, "anti-blindness", "Removes blindness and nausea effects automatically");
+        super(Category.Misc, "anti-blindness", "Removes blindness and nausea effects automatically");
     }
 
     @EventHandler
