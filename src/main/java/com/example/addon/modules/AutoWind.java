@@ -35,8 +35,7 @@ public class AutoWind extends Module {
     private void onItemUse(InteractItemEvent event) {
         if (mc.player == null) return;
 
-        if (event.itemStack.getItem() != Items.WIND_CHARGE) return;
-
+        if (event.item.getItem() != Items.WIND_CHARGE) return;
         if (mc.player.getPitch() <= 60f) return;
         if (!mc.player.isOnGround()) return;
 
