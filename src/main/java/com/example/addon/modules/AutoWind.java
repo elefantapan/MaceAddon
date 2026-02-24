@@ -1,7 +1,7 @@
 package com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
-import meteordevelopment.meteorclient.events.entity.player.InteractItemEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -14,7 +14,7 @@ public class AutoWind extends Module {
 
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("tick-delay")
-        .description("The delay between jumping (in ticks)")
+        .description("Delay between jumps (ticks)")
         .defaultValue(2)
         .range(0, 20)
         .build()
@@ -32,13 +32,19 @@ public class AutoWind extends Module {
     }
 
     @EventHandler
-    private void onItemUse(InteractItemEvent event) {
+    private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
-        if (event.item.getItem() != Items.WIND_CHARGE) return;
+        // Check held item safely
+        if (mc.player.getMainHandStack().getItem() != Items.WIND_CHARGE) return;
+
+        // Looking down
         if (mc.player.getPitch() <= 60f) return;
+
+        // Must be on ground
         if (!mc.player.isOnGround()) return;
 
+        // Tick delay
         if (ticks++ < delay.get()) return;
         ticks = 0;
 
