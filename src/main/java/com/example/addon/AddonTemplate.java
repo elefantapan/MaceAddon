@@ -1,7 +1,7 @@
 package com.example.addon;
 
 import com.example.addon.modules.AxeMaceStun;
-import com.example.addon.modules.autowind;
+import com.example.addon.modules.AutoWind;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -23,7 +23,7 @@ public class AddonTemplate extends MeteorAddon {
 
         // Modules
         Modules.get().add(new AxeMaceStun());
-        Modules.get().add(new autowind());
+        Modules.get().add(new AutoWind());
     }
 
     @Override
