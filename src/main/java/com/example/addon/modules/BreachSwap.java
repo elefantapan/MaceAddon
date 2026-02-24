@@ -1,18 +1,13 @@
 package com.example.addon.modules.pvp;
 
-import com.example.addon.AddonTemplate; // your addon main class
+import com.example.addon.AddonTemplate;
 import meteordevelopment.meteorclient.events.entity.player.AttackEntityEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtCompound;
 
 public class BreachSwap extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -77,7 +72,6 @@ public class BreachSwap extends Module {
     private int dDelay = 0;
 
     public BreachSwap() {
-        // Use your own PvP category from AddonTemplate
         super(AddonTemplate.CATEGORY, "breach-swap", "Swaps with the breach mace in a target slot on attack");
     }
 
@@ -87,19 +81,17 @@ public class BreachSwap extends Module {
 
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
-            if (!stack.isEmpty() && stack.hasEnchantments()) {
-                NbtList enchantments = stack.getEnchantments();
-                for (int j = 0; j < enchantments.size(); j++) {
-                    NbtCompound ench = enchantments.getCompound(j);
-                    if ("minecraft:breach".equals(ench.getString("id"))) {
-                        int level = ench.getInt("lvl");
+            if (!stack.isEmpty() && stack.getEnchantments().size() > 0) {
+                stack.getEnchantments().forEach(ench -> {
+                    if (ench.id().equals("minecraft:breach")) {
+                        int level = ench.level();
                         if (debugMode.get()) info("Found breach level " + level + " in slot " + i);
                         if (level > highestLevel) {
                             highestLevel = level;
                             bestSlot = i;
                         }
                     }
-                }
+                });
             }
         }
 
@@ -111,7 +103,6 @@ public class BreachSwap extends Module {
     private void onAttack(AttackEntityEvent event) {
         if (mc.player == null || mc.world == null) return;
 
-        // Weapon type check
         if (checkWeapon.get()) {
             String id = mc.player.getMainHandStack().getItem().toString();
             boolean isSword = id.contains("sword");
@@ -119,14 +110,9 @@ public class BreachSwap extends Module {
             if ((!allowSword.get() || !isSword) && (!allowAxe.get() || !isAxe)) return;
         }
 
-        if (swapBack.get()) prevSlot = mc.player.getInventory().selectedSlot;
+        if (swapBack.get()) prevSlot = InvUtils.getSelected();
 
-        int slotToSwap;
-        if (autoSwap.get()) {
-            slotToSwap = findBreachMace();
-        } else {
-            slotToSwap = targetSlot.get() - 1;
-        }
+        int slotToSwap = autoSwap.get() ? findBreachMace() : targetSlot.get() - 1;
 
         if (slotToSwap != -1) {
             InvUtils.swap(slotToSwap, false);
