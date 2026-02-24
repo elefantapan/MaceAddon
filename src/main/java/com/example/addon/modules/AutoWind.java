@@ -14,29 +14,42 @@ public class AutoWind extends Module {
 
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("tick-delay")
-        .description("Delay between jumps (ticks)")
-        .defaultValue(2)
+        .description("Delay before jumping after using wind charge (ticks)")
+        .defaultValue(0)
         .range(0, 20)
         .build()
     );
 
     private int ticks;
+    private boolean used;
 
     public AutoWind() {
-        super(AddonTemplate.CATEGORY, "auto-wind", "Auto jump when using wind charge downward");
+        super(AddonTemplate.CATEGORY, "auto-wind", "Jumps when a wind charge is used downward");
     }
 
     @Override
     public void onActivate() {
         ticks = 0;
+        used = false;
     }
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (mc.player == null) return;
 
-        // Check held item safely
-        if (mc.player.getMainHandStack().getItem() != Items.WIND_CHARGE) return;
+        // Must be holding wind charge
+        if (mc.player.getMainHandStack().getItem() != Items.WIND_CHARGE) {
+            used = false;
+            ticks = 0;
+            return;
+        }
+
+        // Detect actual use (right-click)
+        if (mc.options.useKey.isPressed()) {
+            used = true;
+        }
+
+        if (!used) return;
 
         // Looking down
         if (mc.player.getPitch() <= 60f) return;
@@ -44,9 +57,11 @@ public class AutoWind extends Module {
         // Must be on ground
         if (!mc.player.isOnGround()) return;
 
-        // Tick delay
+        // Optional delay
         if (ticks++ < delay.get()) return;
+
         ticks = 0;
+        used = false;
 
         mc.player.jump();
     }
