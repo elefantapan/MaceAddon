@@ -1,6 +1,7 @@
 package com.example.addon;
 
 import com.example.addon.modules.AxeMaceStun;
+import com.example.addon.modules.autowind;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -13,8 +14,8 @@ import org.slf4j.Logger;
 
 public class AddonTemplate extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
-    public static final Category CATEGORY = new Category("Mace Combat");
-    public static final HudGroup HUD_GROUP = new HudGroup("Mace Combat");
+    public static final Category CATEGORY = new Category("Mace");
+    public static final HudGroup HUD_GROUP = new HudGroup("Mace");
 
     @Override
     public void onInitialize() {
@@ -22,6 +23,7 @@ public class AddonTemplate extends MeteorAddon {
 
         // Modules
         Modules.get().add(new AxeMaceStun());
+        Modules.get().add(new autowind());
     }
 
     @Override
