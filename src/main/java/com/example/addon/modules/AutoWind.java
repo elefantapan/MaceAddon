@@ -54,13 +54,13 @@ public class AutoWind extends Module {
         // Looking down
         if (mc.player.getPitch() <= 60f)  {
             used = false
-            return
+            return;
         }
 
         // Must be on ground
         if (!mc.player.isOnGround()) {
             used = false
-            return
+            return;
         }
 
         // Optional delay
