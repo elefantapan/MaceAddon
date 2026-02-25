@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "Mace-Extras",
+  "id": "mace-extras",
   "version": "1.0.0",
   "name": "Mace Extras",
   "description": "An addon for extra (mostly) mace related features",
