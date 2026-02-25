@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "addon-template",
+  "id": "Mace-Extras",
   "version": "1.0.0",
-  "name": "Addon Template",
-  "description": "An addon template for Meteor Client addons.",
+  "name": "Mace Extras",
+  "description": "An addon for extra (mostly) mace related features",
   "authors": [
-    "seasnail"
+    "TheCrowey"
   ],
   "contact": {
     "sources": "https://github.com/MeteorDevelopment/meteor-addon-template"
