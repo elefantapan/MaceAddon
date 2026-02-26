@@ -3,6 +3,7 @@ package com.example.addon.modules;
 import com.example.addon.AddonTemplate;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.IntegerSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -49,6 +50,13 @@ public class AimAssist extends Module {
             .range(1.0, 6.0)
             .build()
     );
+    private final Setting<Boolean> oia = sgGeneral.add(
+        new BoolSetting.Builder()
+            .name("Only in air")
+            .description("If only in air")
+            .defaultValue(false)
+            .build()
+    );
 
     public AimAssist() {
         super(AddonTemplate.CATEGORY, "aim-assist",
@@ -59,6 +67,9 @@ public class AimAssist extends Module {
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.world == null) return;
         if (mc.currentScreen != null) return;
+        if (oia.get()) {
+            if (mc.player.isOnGround()) return;
+        }
 
         // Only when holding a mace
         if (mc.player.getMainHandStack().getItem() != Items.MACE) return;
