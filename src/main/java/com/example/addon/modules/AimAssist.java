@@ -1,6 +1,7 @@
 package com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
+import com.example.addon.helper.SmoothAim;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
@@ -92,25 +93,14 @@ public class AimAssist extends Module {
             -Math.toDegrees(Math.atan2(diff.y, Math.sqrt(diff.x * diff.x + diff.z * diff.z)))
         );
 
-        float yaw = mc.player.getYaw();
-        float pitch = mc.player.getPitch();
-
-        float yawDiff = MathHelper.wrapDegrees((float) (targetYaw - yaw));
-        float pitchDiff = MathHelper.wrapDegrees((float) (targetPitch - pitch));
-
-        float assist = strength.get().floatValue();
-
-        // Apply assist
-        if (axis.get() == AxisMode.X_ONLY || axis.get() == AxisMode.BOTH) {
-            yaw += yawDiff * assist;
-        }
-
-        if (axis.get() == AxisMode.Y_ONLY || axis.get() == AxisMode.BOTH) {
-            pitch += pitchDiff * assist;
-        }
-
-        mc.player.setYaw(yaw);
-        mc.player.setPitch(MathHelper.clamp(pitch, -90, 90));
+        SmoothAim.apply(
+            mc.player,
+            (float) targetYaw,
+            (float) targetPitch,
+            strength.get().floatValue(),
+            axis.get() == AxisMode.X_ONLY || axis.get() == AxisMode.BOTH,
+            axis.get() == AxisMode.Y_ONLY || axis.get() == AxisMode.BOTH
+        );
     }
 
     private PlayerEntity getClosestTarget() {
