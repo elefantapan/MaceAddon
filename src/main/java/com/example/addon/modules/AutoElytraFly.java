@@ -7,9 +7,9 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Items;
-import net.minecraft.util.Hand;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 
 public class AutoElytraFly extends Module {
 
@@ -18,38 +18,37 @@ public class AutoElytraFly extends Module {
     private final Setting<Boolean> onlyInAir = sgGeneral.add(
         new BoolSetting.Builder()
             .name("only-in-air")
-            .description("Only activate when airborne")
             .defaultValue(true)
             .build()
     );
 
     public AutoElytraFly() {
-        super(AddonTemplate.CATEGORY, "auto-elytra-fly",
-            "Automatically jumps and starts elytra flight when equipped.");
+        super(AddonTemplate.CATEGORY,
+            "auto-elytra-fly",
+            "Automatically starts elytra flight when airborne.");
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        ClientPlayerEntity player = mc.player;
-        if (player == null) return;
+        if (mc.player == null || mc.world == null) return;
         if (mc.currentScreen != null) return;
 
         // Elytra equipped
-        if (player.getInventory().getArmorStack(2).getItem() != Items.ELYTRA) return;
+        if (mc.player.getEquippedStack(EquipmentSlot.CHEST).getItem() != Items.ELYTRA) return;
 
         // Already flying
-        if (player.isFallFlying()) return;
+        if (mc.player.isGliding()) return;
 
-        // Only in air (optional)
-        if (onlyInAir.get() && player.isOnGround()) return;
+        // Only activate when airborne
+        if (onlyInAir.get() && mc.player.isOnGround()) return;
 
-        // Must be falling a bit
-        if (player.getVelocity().y >= 0) return;
+        // Must be falling
+        if (mc.player.getVelocity().y >= 0) return;
 
-        // Trigger jump (required by vanilla)
-        player.jump();
-
-        // Start elytra flight
-        player.startFallFlying();
+        // Send vanilla start-flying packet
+        mc.interactionManager.sendPlayerCommand(
+            mc.player,
+            ClientCommandC2SPacket.Mode.START_FALL_FLYING
+        );
     }
 }
