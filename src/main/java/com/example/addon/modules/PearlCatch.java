@@ -1,7 +1,7 @@
 package com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
-import com.example.addon.util.SmoothAim;
+import com.example.addon.helper.SmoothAim;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
