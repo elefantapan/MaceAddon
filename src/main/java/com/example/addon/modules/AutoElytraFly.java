@@ -41,13 +41,15 @@ public class AutoElytraFly extends Module {
 
         // Only activate when airborne
         if (onlyInAir.get() && mc.player.isOnGround()) return;
-
+        if (!player.isFallFlying() && !player.isOnGround()) {
+            mc.player.networkHandler.sendPacket(
+                new ClientCommandC2SPacket(
+                    mc.player,
+                    ClientCommandC2SPacket.Mode.START_FALL_FLYING
+                )
+            );
+        }
         // Send vanilla start-flying packet
-        mc.player.networkHandler.sendPacket(
-            new ClientCommandC2SPacket(
-                mc.player,
-                ClientCommandC2SPacket.Mode.START_FALL_FLYING
-            )
-        );
+        
     }
 }
