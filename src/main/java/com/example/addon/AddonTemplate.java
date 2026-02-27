@@ -4,6 +4,7 @@ import com.example.addon.modules.AxeMaceStun;
 import com.example.addon.modules.AutoWind;
 import com.example.addon.modules.ShieldBreaker;
 import com.example.addon.modules.AutoElytraFly;
+import com.example.addon.modules.PearlCatch;
 import com.example.addon.modules.AimAssist;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
@@ -30,6 +31,7 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new ShieldBreaker());
         Modules.get().add(new AimAssist());
         Modules.get().add(new AutoElytraFly());
+        Modules.get().add(new PearlCatch());
     }
 
     @Override
