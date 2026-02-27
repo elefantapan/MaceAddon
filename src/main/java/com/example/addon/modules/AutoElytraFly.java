@@ -42,9 +42,6 @@ public class AutoElytraFly extends Module {
         // Only activate when airborne
         if (onlyInAir.get() && mc.player.isOnGround()) return;
 
-        // Must be falling
-        if (mc.player.getVelocity().y >= 0) return;
-
         // Send vanilla start-flying packet
         mc.player.networkHandler.sendPacket(
             new ClientCommandC2SPacket(
