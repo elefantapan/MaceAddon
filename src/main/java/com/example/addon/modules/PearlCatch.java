@@ -51,7 +51,7 @@ public class PearlCatch extends Module {
             return;
         }
     
-        previousSlot = mc.player.getInventory().getSelectedSlot()
+        previousSlot = mc.player.getInventory().getSelectedSlot();
     
         InvUtils.swap(pearlSlot, false);
         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
