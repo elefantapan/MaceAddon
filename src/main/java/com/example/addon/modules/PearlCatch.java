@@ -42,19 +42,19 @@ public class PearlCatch extends Module {
             toggle();
             return;
         }
-
+    
         int pearlSlot = InvUtils.findInHotbar(Items.ENDER_PEARL).slot();
         if (pearlSlot == -1) {
             error("No ender pearl in hotbar.");
             toggle();
             return;
         }
-
-        previousSlot = mc.player.getInventory().selectedSlot;
-
+    
+        previousSlot = InvUtils.getSelectedSlot();
+    
         InvUtils.swap(pearlSlot, false);
         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-
+    
         ticks = 0;
         active = true;
     }
