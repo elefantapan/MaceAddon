@@ -1,94 +1,87 @@
 package com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
-import com.example.addon.helper.SmoothAim;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
 
 public class PearlCatch extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Double> strength = sgGeneral.add(
-        new DoubleSetting.Builder()
-            .name("aim-strength")
-            .defaultValue(0.25)
-            .range(0.05, 1.0)
-            .build()
-    );
-
-    private final Setting<Integer> predictTicks = sgGeneral.add(
+    private final Setting<Integer> delayTicks = sgGeneral.add(
         new IntSetting.Builder()
-            .name("predict-ticks")
-            .description("How many ticks ahead to predict pearl position")
-            .defaultValue(2)
-            .range(1, 6)
+            .name("delay")
+            .description("Ticks between pearl throw and wind charge.")
+            .defaultValue(7)
+            .min(1)
+            .max(20)
+            .sliderMax(20)
             .build()
     );
 
-    private EnderPearlEntity lastPearl;
+    private int ticks = 0;
+    private boolean active = false;
+    private int previousSlot = -1;
 
     public PearlCatch() {
         super(AddonTemplate.CATEGORY,
             "pearl-catch",
-            "Catches your last thrown pearl with a wind charge.");
+            "Throws a pearl, then catches it with a wind charge.");
     }
 
     @Override
-    public void onDeactivate() {
-        lastPearl = null;
+    public void onActivate() {
+        if (mc.player == null || mc.world == null) {
+            toggle();
+            return;
+        }
+
+        int pearlSlot = InvUtils.findInHotbar(Items.ENDER_PEARL).slot();
+        if (pearlSlot == -1) {
+            error("No ender pearl in hotbar.");
+            toggle();
+            return;
+        }
+
+        previousSlot = mc.player.getInventory().selectedSlot;
+
+        InvUtils.swap(pearlSlot, false);
+        mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+
+        ticks = 0;
+        active = true;
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null) return;
+        if (!active || mc.player == null) return;
 
-        // Track latest pearl
-        for (Entity e : mc.world.getEntities()) {
-            if (e instanceof EnderPearlEntity pearl && pearl.getOwner() == mc.player) {
-                lastPearl = pearl;
-            }
+        ticks++;
+
+        if (ticks < delayTicks.get()) return;
+
+        int windSlot = InvUtils.findInHotbar(Items.WIND_CHARGE).slot();
+        if (windSlot == -1) {
+            error("No wind charge in hotbar.");
+            toggle();
+            return;
         }
 
-        if (lastPearl == null || !lastPearl.isAlive()) return;
-
-        boolean holdingWindCharge =
-            mc.player.getMainHandStack().getItem() == Items.WIND_CHARGE;
-
-        boolean triedPearlOnCooldown =
-            mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL
-            && mc.player.getItemCooldownManager().isCoolingDown(Items.ENDER_PEARL);
-
-        if (!holdingWindCharge && !triedPearlOnCooldown) return;
-
-        // Predict pearl position
-        Vec3d predicted = lastPearl.getPos()
-            .add(lastPearl.getVelocity().multiply(predictTicks.get()));
-
-        // Smooth aim
-        SmoothAim.lookAt(
-            predicted,
-            strength.get().floatValue(),
-            true,
-            true
-        );
-
-        // Throw wind charge
-        if (!InvUtils.findInHotbar(Items.WIND_CHARGE).found()) return;
-
-        InvUtils.swap(
-            InvUtils.findInHotbar(Items.WIND_CHARGE).slot(),
-            false
-        );
-
+        InvUtils.swap(windSlot, false);
         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+
+        if (previousSlot != -1) {
+            InvUtils.swap(previousSlot, false);
+        }
+
+        active = false;
+        toggle(); // auto-disable
     }
 }
