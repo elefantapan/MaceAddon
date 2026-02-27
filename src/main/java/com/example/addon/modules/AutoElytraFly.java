@@ -31,25 +31,13 @@ public class AutoElytraFly extends Module {
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.world == null) return;
-        if (mc.currentScreen != null) return;
-
-        // Elytra equipped
-        if (mc.player.getEquippedStack(EquipmentSlot.CHEST).getItem() != Items.ELYTRA) return;
-
-        // Already flying
-        if (mc.player.isGliding()) return;
-
-        // Only activate when airborne
-        if (onlyInAir.get() && mc.player.isOnGround()) return;
-        if (!player.isFallFlying() && !player.isOnGround()) {
-            mc.player.networkHandler.sendPacket(
-                new ClientCommandC2SPacket(
-                    mc.player,
-                    ClientCommandC2SPacket.Mode.START_FALL_FLYING
-                )
-            );
+    
+        // Only if wearing elytra
+        if (mc.player.getInventory().getArmorStack(2).getItem() != Items.ELYTRA) return;
+    
+        // Only start flying if in air and not already flying
+        if (!mc.player.isFallFlying() && !mc.player.isOnGround()) {
+            mc.player.startFallFlying();
         }
-        // Send vanilla start-flying packet
-        
     }
 }
