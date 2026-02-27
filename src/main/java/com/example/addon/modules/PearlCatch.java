@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 
 public class PearlCatch extends Module {
 
