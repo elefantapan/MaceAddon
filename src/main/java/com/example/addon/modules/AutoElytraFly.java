@@ -46,9 +46,11 @@ public class AutoElytraFly extends Module {
         if (mc.player.getVelocity().y >= 0) return;
 
         // Send vanilla start-flying packet
-        mc.interactionManager.sendPlayerCommand(
-            mc.player,
-            ClientCommandC2SPacket.Mode.START_FALL_FLYING
+        mc.player.networkHandler.sendPacket(
+            new ClientCommandC2SPacket(
+                mc.player,
+                ClientCommandC2SPacket.Mode.START_FALL_FLYING
+            )
         );
     }
 }
