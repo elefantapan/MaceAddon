@@ -9,10 +9,13 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
+
+import java.lang.reflect.Field;
 
 public class PearlCatch extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -46,8 +49,8 @@ public class PearlCatch extends Module {
             return;
         }
 
-        // Save current slot
-        previousSlot = mc.player.getInventory().selectedSlot;
+        // Save current slot reflectively
+        previousSlot = getSelectedSlotReflectively();
 
         // Swap and throw pearl
         InvUtils.swap(pearlSlot, true);
@@ -105,10 +108,10 @@ public class PearlCatch extends Module {
         mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
     }
 
-    private int findHotbarItem(Items item) {
+    private int findHotbarItem(Item item) {
         for (int i = 0; i < 9; i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
-            if (stack.isOf(item)) return i;
+            if (stack.getItem() == item) return i;
         }
         return -1;
     }
@@ -126,5 +129,15 @@ public class PearlCatch extends Module {
         float targetPitch = (float) -Math.toDegrees(Math.atan2(dy, distXZ));
 
         SmoothAim.apply(mc.player, targetYaw, targetPitch, smoothFactor, true, true);
+    }
+
+    private int getSelectedSlotReflectively() {
+        try {
+            Field field = mc.player.getInventory().getClass().getDeclaredField("selectedSlot");
+            field.setAccessible(true);
+            return field.getInt(mc.player.getInventory());
+        } catch (Exception e) {
+            return -1;
+        }
     }
 }
