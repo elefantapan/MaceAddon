@@ -196,7 +196,7 @@ public class BetterESP extends Module {
             );
         }
     }
-}
+} }
         }
     }
 }
