@@ -127,7 +127,7 @@ public class BetterESP extends Module {
         int startX = cp.getStartX();
         int startZ = cp.getStartZ();
 
-        for (int y = mc.world.getBottomY(); y < mc.world.getTopY(); y++) {
+        for (int y = mc.world.getBottomY(); y < mc.world.getTopY(net.minecraft.world.Heightmap.Type.WORLD_SURFACE, startX + dx, startZ + dz); y++) {
             for (int dx = 0; dx < 16; dx++) {
                 for (int dz = 0; dz < 16; dz++) {
 
