@@ -159,23 +159,44 @@ public class BetterESP extends Module {
                 }
             }
         }
-
         for (Map.Entry<BlockPos, SettingColor> entry : renderMap.entrySet()) {
-            BlockPos pos = entry.getKey();
-            SettingColor color = entry.getValue();
+    BlockPos pos = entry.getKey();
+    SettingColor color = entry.getValue();
 
-            switch (renderMode.get()) {
-                case Fill -> {
-                    Renderer3D.box(event.matrixStack, event.renderer, pos, color, color, 0);
-                }
-                case Wireframe -> {
-                    Renderer3D.boxLines(event.matrixStack, event.renderer, pos, color, lineWidth.get());
-                }
-                case Both -> {
-                    Renderer3D.box(event.matrixStack, event.renderer, pos, color, color, 0);
-                    Renderer3D.boxLines(event.matrixStack, event.renderer, pos, color, lineWidth.get());
-                }
-            }
+    switch (renderMode.get()) {
+        case Fill -> {
+            event.renderer.box(
+                pos,
+                color,
+                color,
+                0
+            );
+        }
+
+        case Wireframe -> {
+            event.renderer.boxLines(
+                pos,
+                color,
+                lineWidth.get()
+            );
+        }
+
+        case Both -> {
+            event.renderer.box(
+                pos,
+                color,
+                color,
+                0
+            );
+
+            event.renderer.boxLines(
+                pos,
+                color,
+                lineWidth.get()
+            );
+        }
+    }
+}
         }
     }
 }
