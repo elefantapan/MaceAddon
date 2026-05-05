@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -14,7 +15,7 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-import meteordevelopment.meteorclient.utils.render.Renderer3D;
+import meteordevelopment.meteorclient.utils.render.color.ShapeMode;
 
 import java.util.*;
 
@@ -165,16 +166,33 @@ public class BetterESP extends Module {
 
     switch (renderMode.get()) {
         case Fill -> {
-            event.renderer.box(pos, color, color, 0);
+            event.renderer.box(
+                pos,
+                color,
+                color,
+                ShapeMode.Sides,
+                0
+            );
         }
 
         case Wireframe -> {
-            event.renderer.boxLines(pos, color, lineWidth.get());
+            event.renderer.box(
+                pos,
+                color,
+                color,
+                ShapeMode.Lines,
+                0
+            );
         }
 
         case Both -> {
-            event.renderer.box(pos, color, color, 0);
-            event.renderer.boxLines(pos, color, lineWidth.get());
+            event.renderer.box(
+                pos,
+                color,
+                color,
+                ShapeMode.Both,
+                0
+            );
         }
     }
 }
