@@ -15,7 +15,7 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-import meteordevelopment.meteorclient.utils.render.color.ShapeMode;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 
 import java.util.*;
 
