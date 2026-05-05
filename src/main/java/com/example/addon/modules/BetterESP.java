@@ -5,196 +5,212 @@ import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
+import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.*;
 
-import meteordevelopment.meteorclient.renderer.ShapeMode;
+import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.*;
 
 public class BetterESP extends Module {
+
     public BetterESP() {
-        super(Categories.Render, "better-esp", "Highlights veins touching air or water with configurable rendering.");
+        super(Categories.Render, "better-esp", "Optimized vein ESP using chunk caching.");
     }
 
-    public enum RenderMode {
-        Fill,
-        Wireframe,
-        Both
-    }
+    // ---------------- SETTINGS ----------------
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("blocks")
-        .description("Blocks to highlight.")
         .defaultValue(Blocks.DIAMOND_ORE, Blocks.DEEPSLATE_DIAMOND_ORE)
-        .build()
-    );
-
-    private final Setting<Integer> range = sgGeneral.add(new IntSetting.Builder()
-        .name("range")
-        .description("Scan range.")
-        .defaultValue(32)
-        .min(1)
-        .sliderMax(128)
-        .build()
-    );
-
-    private final Setting<Integer> leniency = sgGeneral.add(new IntSetting.Builder()
-        .name("leniency")
-        .description("How far from air/water blocks can be and still render.")
-        .defaultValue(0)
-        .min(0)
-        .sliderMax(10)
         .build()
     );
 
     private final Setting<SettingColor> airColor = sgGeneral.add(new ColorSetting.Builder()
         .name("air-color")
-        .description("Color when touching air.")
         .defaultValue(new SettingColor(255, 255, 255, 120))
         .build()
     );
 
     private final Setting<SettingColor> waterColor = sgGeneral.add(new ColorSetting.Builder()
         .name("water-color")
-        .description("Color when touching water.")
         .defaultValue(new SettingColor(0, 100, 255, 120))
         .build()
     );
 
-    private final Setting<RenderMode> renderMode = sgGeneral.add(new EnumSetting.Builder<RenderMode>()
-        .name("render-mode")
-        .description("How the boxes are rendered.")
-        .defaultValue(RenderMode.Wireframe)
+    private final Setting<Integer> maxVeinSize = sgGeneral.add(new IntSetting.Builder()
+        .name("max-vein-size")
+        .defaultValue(80)
+        .min(1)
+        .sliderMax(500)
         .build()
     );
 
-    private final Setting<Double> lineWidth = sgGeneral.add(new DoubleSetting.Builder()
-        .name("line-width")
-        .description("Width of wireframe lines.")
-        .defaultValue(1.5)
-        .min(0.1)
-        .sliderMax(5)
-        .visible(() -> renderMode.get() != RenderMode.Fill)
+    private final Setting<Boolean> showAir = sgGeneral.add(new BoolSetting.Builder()
+        .name("air")
+        .defaultValue(true)
         .build()
     );
 
-    @EventHandler
-    private void onRender(Render3DEvent event) {
-        if (mc.player == null || mc.world == null) return;
+    private final Setting<Boolean> showWater = sgGeneral.add(new BoolSetting.Builder()
+        .name("water")
+        .defaultValue(true)
+        .build()
+    );
 
-        BlockPos playerPos = mc.player.getBlockPos();
-        int r = range.get();
+    // ---------------- CACHE ----------------
 
-        Set<BlockPos> visited = new HashSet<>();
-        Map<BlockPos, SettingColor> renderMap = new HashMap<>();
+    private final Set<BlockPos> airVeins = new HashSet<>();
+    private final Set<BlockPos> waterVeins = new HashSet<>();
 
-        for (int x = -r; x <= r; x++) {
-            for (int y = -r; y <= r; y++) {
-                for (int z = -r; z <= r; z++) {
-                    BlockPos pos = playerPos.add(x, y, z);
+    private final Set<ChunkPos> scannedChunks = new HashSet<>();
 
-                    if (visited.contains(pos)) continue;
+    // ---------------- EVENTS ----------------
 
-                    BlockState state = mc.world.getBlockState(pos);
-                    if (!blocks.get().contains(state.getBlock())) continue;
+    @Override
+    public void onActivate() {
+        airVeins.clear();
+        waterVeins.clear();
+        scannedChunks.clear();
 
-                    Set<BlockPos> vein = new HashSet<>();
-                    Queue<BlockPos> queue = new LinkedList<>();
-                    queue.add(pos);
-
-                    boolean touchesAir = false;
-                    boolean touchesWater = false;
-
-                    Map<BlockPos, Integer> distance = new HashMap<>();
-                    distance.put(pos, 0);
-
-                    while (!queue.isEmpty()) {
-                        BlockPos current = queue.poll();
-                        if (visited.contains(current)) continue;
-
-                        visited.add(current);
-                        vein.add(current);
-
-                        int dist = distance.get(current);
-
-                        for (Direction dir : Direction.values()) {
-                            BlockPos neighbor = current.offset(dir);
-                            BlockState neighborState = mc.world.getBlockState(neighbor);
-
-                            if (neighborState.isAir()) {
-                                if (dist <= leniency.get()) touchesAir = true;
-                            }
-
-                            if (neighborState.getFluidState().getFluid() == Fluids.WATER) {
-                                if (dist <= leniency.get()) touchesWater = true;
-                            }
-
-                            if (!visited.contains(neighbor)
-                                && blocks.get().contains(neighborState.getBlock())) {
-
-                                distance.put(neighbor, dist + 1);
-                                queue.add(neighbor);
-                            }
-                        }
-                    }
-
-                    SettingColor color = null;
-                    if (touchesWater) color = waterColor.get();
-                    else if (touchesAir) color = airColor.get();
-
-                    if (color != null) {
-                        for (BlockPos p : vein) {
-                            renderMap.put(p, color);
-                        }
-                    }
+        // scan all loaded chunks once
+        if (mc.world != null) {
+            for (net.minecraft.world.chunk.Chunk chunk : meteordevelopment.meteorclient.utils.Utils.chunks()) {
+                if (chunk instanceof WorldChunk wc) {
+                    scanChunk(wc);
                 }
             }
         }
-        for (Map.Entry<BlockPos, SettingColor> entry : renderMap.entrySet()) {
-    BlockPos pos = entry.getKey();
-    SettingColor color = entry.getValue();
+    }
 
-    switch (renderMode.get()) {
-        case Fill -> {
-            event.renderer.box(
-                pos,
-                color,
-                color,
-                ShapeMode.Sides,
-                0
-            );
-        }
+    @Override
+    public void onDeactivate() {
+        airVeins.clear();
+        waterVeins.clear();
+        scannedChunks.clear();
+    }
 
-        case Wireframe -> {
-            event.renderer.box(
-                pos,
-                color,
-                color,
-                ShapeMode.Lines,
-                0
-            );
-        }
+    // Chunk load → scan ONCE
+    @EventHandler
+    private void onChunkLoad(ChunkDataEvent event) {
+        if (!(event.chunk() instanceof WorldChunk chunk)) return;
+        scanChunk(chunk);
+    }
 
-        case Both -> {
-            event.renderer.box(
-                pos,
-                color,
-                color,
-                ShapeMode.Both,
-                0
-            );
+    // Block update → rescan chunk (only affected chunk)
+    @EventHandler
+    private void onBlockUpdate(BlockUpdateEvent event) {
+        ChunkPos cp = new ChunkPos(event.pos);
+        WorldChunk chunk = mc.world.getChunk(cp.x, cp.z);
+        if (chunk != null) scanChunk(chunk);
+    }
+
+    // ---------------- SCANNING ----------------
+
+    private void scanChunk(WorldChunk chunk) {
+        ChunkPos cp = chunk.getPos();
+
+        if (scannedChunks.contains(cp)) return;
+        scannedChunks.add(cp);
+
+        int startX = cp.getStartX();
+        int startZ = cp.getStartZ();
+
+        for (int y = mc.world.getBottomY(); y < mc.world.getTopY(); y++) {
+            for (int dx = 0; dx < 16; dx++) {
+                for (int dz = 0; dz < 16; dz++) {
+
+                    BlockPos start = new BlockPos(startX + dx, y, startZ + dz);
+                    BlockState state = mc.world.getBlockState(start);
+
+                    if (!blocks.get().contains(state.getBlock())) continue;
+
+                    classifyVein(start);
+                }
+            }
         }
     }
-}
+
+    // BFS but HEAVILY capped
+    private void classifyVein(BlockPos start) {
+        if (airVeins.contains(start) || waterVeins.contains(start)) return;
+
+        Set<BlockPos> vein = new HashSet<>();
+        Queue<BlockPos> queue = new LinkedList<>();
+
+        boolean touchesAir = false;
+        boolean touchesWater = false;
+
+        queue.add(start);
+
+        while (!queue.isEmpty()) {
+            BlockPos pos = queue.poll();
+            if (vein.contains(pos)) continue;
+
+            vein.add(pos);
+
+            if (vein.size() > maxVeinSize.get()) break;
+
+            for (Direction dir : Direction.values()) {
+                BlockPos n = pos.offset(dir);
+                BlockState s = mc.world.getBlockState(n);
+
+                if (s.isAir()) touchesAir = true;
+                if (s.getFluidState().getFluid() == Fluids.WATER) touchesWater = true;
+
+                if (blocks.get().contains(s.getBlock())) {
+                    queue.add(n);
+                }
+            }
+        }
+
+        if (touchesAir && showAir.get()) {
+            airVeins.addAll(vein);
+        }
+
+        if (touchesWater && showWater.get()) {
+            waterVeins.addAll(vein);
+        }
+    }
+
+    // ---------------- RENDER ----------------
+
+    @EventHandler
+    private void onRender(Render3DEvent event) {
+
+        if (showAir.get()) {
+            for (BlockPos pos : airVeins) {
+                event.renderer.box(
+                    pos,
+                    airColor.get(),
+                    airColor.get(),
+                    ShapeMode.Lines,
+                    0
+                );
+            }
+        }
+
+        if (showWater.get()) {
+            for (BlockPos pos : waterVeins) {
+                event.renderer.box(
+                    pos,
+                    waterColor.get(),
+                    waterColor.get(),
+                    ShapeMode.Lines,
+                    0
+                );
+            }
+        }
     }
 }
