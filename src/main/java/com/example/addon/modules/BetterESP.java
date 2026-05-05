@@ -119,28 +119,38 @@ public class BetterESP extends Module {
     // ---------------- SCANNING ----------------
 
     private void scanChunk(WorldChunk chunk) {
-        ChunkPos cp = chunk.getPos();
+    if (mc.world == null) return;
 
-        if (scannedChunks.contains(cp)) return;
-        scannedChunks.add(cp);
+    ChunkPos chunkPos = chunk.getPos();
+    int startX = chunkPos.getStartX();
+    int startZ = chunkPos.getStartZ();
 
-        int startX = cp.getStartX();
-        int startZ = cp.getStartZ();
+    int minY = mc.world.getBottomY();
 
-        for (int y = mc.world.getBottomY(); y < mc.world.getTopY(net.minecraft.world.Heightmap.Type.WORLD_SURFACE, startX + dx, startZ + dz); y++) {
-            for (int dx = 0; dx < 16; dx++) {
-                for (int dz = 0; dz < 16; dz++) {
+    for (int dx = 0; dx < 16; dx++) {
+        for (int dz = 0; dz < 16; dz++) {
 
-                    BlockPos start = new BlockPos(startX + dx, y, startZ + dz);
-                    BlockState state = mc.world.getBlockState(start);
+            int worldX = startX + dx;
+            int worldZ = startZ + dz;
 
-                    if (!blocks.get().contains(state.getBlock())) continue;
+            int maxY = mc.world.getTopY(
+                net.minecraft.world.Heightmap.Type.WORLD_SURFACE,
+                worldX,
+                worldZ
+            );
 
-                    classifyVein(start);
-                }
+            for (int y = minY; y < maxY; y++) {
+
+                BlockPos pos = new BlockPos(worldX, y, worldZ);
+                BlockState state = mc.world.getBlockState(pos);
+
+                if (!blocks.get().contains(state.getBlock())) continue;
+
+                classifyVein(pos);
             }
         }
     }
+}
 
     // BFS but HEAVILY capped
     private void classifyVein(BlockPos start) {
