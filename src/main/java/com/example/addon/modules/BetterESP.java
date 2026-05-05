@@ -165,38 +165,18 @@ public class BetterESP extends Module {
 
     switch (renderMode.get()) {
         case Fill -> {
-            event.renderer.box(
-                pos,
-                color,
-                color,
-                0
-            );
+            event.renderer.box(pos, color, color, 0);
         }
 
         case Wireframe -> {
-            event.renderer.boxLines(
-                pos,
-                color,
-                lineWidth.get()
-            );
+            event.renderer.boxLines(pos, color, lineWidth.get());
         }
 
         case Both -> {
-            event.renderer.box(
-                pos,
-                color,
-                color,
-                0
-            );
-
-            event.renderer.boxLines(
-                pos,
-                color,
-                lineWidth.get()
-            );
+            event.renderer.box(pos, color, color, 0);
+            event.renderer.boxLines(pos, color, lineWidth.get());
         }
     }
-} }
-        }
+}
     }
 }
