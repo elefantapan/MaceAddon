@@ -127,8 +127,20 @@ public class FakeSpawner extends Module {
             double y = pos.getY() + 0.5;
             double z = pos.getZ() + 0.5;
 
-            mc.world.addParticle(ParticleTypes.SMOKE, x, y, z, 0, 0.02, 0);
-            mc.world.addParticle(ParticleTypes.FLAME, x, y, z, 0, 0.02, 0);
+            // FIXED PARTICLE CALLS (your version-compatible)
+            mc.world.addParticle(
+                    ParticleTypes.SMOKE,
+                    false, false,
+                    x, y, z,
+                    0.0, 0.02, 0.0
+            );
+
+            mc.world.addParticle(
+                    ParticleTypes.FLAME,
+                    false, false,
+                    x, y, z,
+                    0.0, 0.02, 0.0
+            );
 
             renderSkeleton(e, pos);
         }
@@ -148,14 +160,18 @@ public class FakeSpawner extends Module {
 
         s.setYaw((System.currentTimeMillis() / 10f) % 360);
 
+        // FIXED CAMERA (NO getPos() DEPENDENCY)
         Camera cam = mc.gameRenderer.getCamera();
-        var cp = cam.getPos();
+
+        double cx = cam.getX();
+        double cy = cam.getY();
+        double cz = cam.getZ();
 
         mc.getEntityRenderDispatcher().render(
                 s,
-                s.getX() - cp.x,
-                s.getY() - cp.y,
-                s.getZ() - cp.z,
+                s.getX() - cx,
+                s.getY() - cy,
+                s.getZ() - cz,
                 s.getYaw(),
                 1.0f,
                 e.matrices,
