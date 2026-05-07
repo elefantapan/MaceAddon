@@ -66,7 +66,7 @@ public class FakeSpawner extends Module {
         }
     }
 
-    // ---------------- CONVERT STACK ----------------
+    // ---------------- CONVERT ----------------
     private void convert(BlockPos start) {
         World w = mc.world;
         int count = 0;
@@ -127,17 +127,15 @@ public class FakeSpawner extends Module {
             double y = pos.getY() + 0.5;
             double z = pos.getZ() + 0.5;
 
-            // FIXED PARTICLE CALLS (your version-compatible)
+            // ✅ YOUR VERSION ONLY SUPPORTS THIS OVERLOAD
             mc.world.addParticle(
                     ParticleTypes.SMOKE,
-                    false, false,
                     x, y, z,
                     0.0, 0.02, 0.0
             );
 
             mc.world.addParticle(
                     ParticleTypes.FLAME,
-                    false, false,
                     x, y, z,
                     0.0, 0.02, 0.0
             );
@@ -160,9 +158,9 @@ public class FakeSpawner extends Module {
 
         s.setYaw((System.currentTimeMillis() / 10f) % 360);
 
-        // FIXED CAMERA (NO getPos() DEPENDENCY)
         Camera cam = mc.gameRenderer.getCamera();
 
+        // ✅ YOUR VERSION: NO getPos(), use direct coords
         double cx = cam.getX();
         double cy = cam.getY();
         double cz = cam.getZ();
