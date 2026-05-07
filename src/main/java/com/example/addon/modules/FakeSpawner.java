@@ -29,18 +29,16 @@ import java.util.Set;
 
 public class FakeSpawner extends Module {
 
-    private int storedSpawners = 0;
-    private final Set<BlockPos> activeSpawners = new HashSet<>();
+    private int stored = 0;
+    private final Set<BlockPos> active = new HashSet<>();
 
     public FakeSpawner() {
-        super(null, "fake-spawner", "Chain → fake spawner system");
+        super(null, "fake-spawner", "Chain spawner system");
     }
 
-    // -----------------------------
-    // INTERACTION LOGIC
-    // -----------------------------
+    // ---------------- INTERACT ----------------
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
+    private void onTick(TickEvent.Pre e) {
         if (mc.player == null || mc.world == null) return;
         if (!mc.options.useKey.isPressed()) return;
 
@@ -52,48 +50,45 @@ public class FakeSpawner extends Module {
         if (!state.isOf(Blocks.CHAIN)) return;
 
         if (mc.player.isSneaking()) {
-            convertChainStack(pos);
+            convert(pos);
         } else {
             openGui();
-            activeSpawners.add(pos.toImmutable());
+            active.add(pos.toImmutable());
         }
     }
 
-    // -----------------------------
-    // CONVERT CHAIN STACK → STORAGE
-    // -----------------------------
-    private void convertChainStack(BlockPos start) {
-        if (mc.world == null) return;
-
-        World world = mc.world;
+    // ---------------- CONVERT STACK ----------------
+    private void convert(BlockPos start) {
+        World w = mc.world;
         int count = 0;
 
         BlockPos.Mutable pos = start.mutableCopy();
 
-        while (world.getBlockState(pos).isOf(Blocks.CHAIN)) {
-            world.breakBlock(pos, false);
+        while (w.getBlockState(pos).isOf(Blocks.CHAIN)) {
+            w.breakBlock(pos, false);
             count++;
             pos.move(Direction.UP);
         }
 
-        storedSpawners += count;
-        info("Stored spawners: " + storedSpawners);
+        stored += count;
+        info("Stored: " + stored);
     }
 
-    // -----------------------------
-    // FAKE GUI
-    // -----------------------------
+    // ---------------- GUI ----------------
     private void openGui() {
         SimpleInventory inv = new SimpleInventory(54);
 
         ItemStack gold = new ItemStack(Items.GOLD_INGOT);
-        gold.setCustomName(Text.literal("Upgrade").formatted(Formatting.GOLD));
+        gold.set(DataComponentTypes.CUSTOM_NAME,
+            Text.literal("Upgrade").formatted(Formatting.GOLD));
 
         ItemStack skull = new ItemStack(Items.SKELETON_SKULL);
-        skull.setCustomName(Text.literal("Skeleton Spawner"));
+        skull.set(DataComponentTypes.CUSTOM_NAME,
+            Text.literal("Skeleton Spawner"));
 
         ItemStack dropper = new ItemStack(Items.DROPPER);
-        dropper.setCustomName(Text.literal("Collect").formatted(Formatting.GREEN));
+        dropper.set(DataComponentTypes.CUSTOM_NAME,
+            Text.literal("Collect").formatted(Formatting.GREEN));
 
         inv.setStack(48, gold);
         inv.setStack(49, skull);
@@ -108,18 +103,16 @@ public class FakeSpawner extends Module {
                 6
             ),
             mc.player.getInventory(),
-            Text.literal(storedSpawners + " Skeleton Spawners")
+            Text.literal(stored + " Skeleton Spawners")
         ));
     }
 
-    // -----------------------------
-    // RENDER LOOP
-    // -----------------------------
+    // ---------------- RENDER ----------------
     @EventHandler
-    private void onRender(Render3DEvent event) {
+    private void onRender(Render3DEvent e) {
         if (mc.world == null) return;
 
-        for (BlockPos pos : activeSpawners) {
+        for (BlockPos pos : active) {
 
             double x = pos.getX() + 0.5;
             double y = pos.getY() + 0.5;
@@ -137,37 +130,35 @@ public class FakeSpawner extends Module {
                 0, 0.02, 0
             );
 
-            renderSkeleton(event, pos);
+            renderSkeleton(e, pos);
         }
     }
 
-    // -----------------------------
-    // FAKE SPINNER SKELETON
-    // -----------------------------
-    private void renderSkeleton(Render3DEvent event, BlockPos pos) {
+    // ---------------- FAKE MOB ----------------
+    private void renderSkeleton(Render3DEvent e, BlockPos pos) {
         if (mc.world == null) return;
 
-        SkeletonEntity skeleton = new SkeletonEntity(EntityType.SKELETON, mc.world);
+        SkeletonEntity s = new SkeletonEntity(EntityType.SKELETON, mc.world);
 
-        skeleton.setPosition(
+        s.setPosition(
             pos.getX() + 0.5,
             pos.getY() + 0.1,
             pos.getZ() + 0.5
         );
 
-        skeleton.setYaw((System.currentTimeMillis() / 10f) % 360);
+        s.setYaw((System.currentTimeMillis() / 10f) % 360);
 
         Camera cam = mc.gameRenderer.getCamera();
-        var camPos = cam.getPos();
+        var cp = cam.getPos();
 
         mc.getEntityRenderDispatcher().render(
-            skeleton,
-            skeleton.getX() - camPos.x,
-            skeleton.getY() - camPos.y,
-            skeleton.getZ() - camPos.z,
-            skeleton.getYaw(),
+            s,
+            s.getX() - cp.x,
+            s.getY() - cp.y,
+            s.getZ() - cp.z,
+            s.getYaw(),
             1.0f,
-            event.matrices,
+            e.matrices,
             mc.getBufferBuilders().getEntityVertexConsumers(),
             15728880
         );
