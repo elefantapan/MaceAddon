@@ -7,22 +7,31 @@ import meteordevelopment.orbit.EventHandler;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.client.render.Camera;
+
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.SkeletonEntity;
+
 import net.minecraft.inventory.SimpleInventory;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+
 import net.minecraft.particle.ParticleTypes;
+
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
+
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
-import net.minecraft.client.render.Camera;
+
+import net.minecraft.component.DataComponentTypes;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +42,7 @@ public class FakeSpawner extends Module {
     private final Set<BlockPos> active = new HashSet<>();
 
     public FakeSpawner() {
-        super(null, "fake-spawner", "Chain spawner system");
+        super(null, "fake-spawner", "Iron bar spawner system");
     }
 
     // ---------------- INTERACT ----------------
@@ -47,7 +56,7 @@ public class FakeSpawner extends Module {
         BlockPos pos = hit.getBlockPos();
         BlockState state = mc.world.getBlockState(pos);
 
-        if (!state.isOf(Blocks.CHAIN)) return;
+        if (!state.isOf(Blocks.IRON_BARS)) return;
 
         if (mc.player.isSneaking()) {
             convert(pos);
@@ -64,7 +73,7 @@ public class FakeSpawner extends Module {
 
         BlockPos.Mutable pos = start.mutableCopy();
 
-        while (w.getBlockState(pos).isOf(Blocks.CHAIN)) {
+        while (w.getBlockState(pos).isOf(Blocks.IRON_BARS)) {
             w.breakBlock(pos, false);
             count++;
             pos.move(Direction.UP);
@@ -80,30 +89,30 @@ public class FakeSpawner extends Module {
 
         ItemStack gold = new ItemStack(Items.GOLD_INGOT);
         gold.set(DataComponentTypes.CUSTOM_NAME,
-            Text.literal("Upgrade").formatted(Formatting.GOLD));
+                Text.literal("Upgrade").formatted(Formatting.GOLD));
 
         ItemStack skull = new ItemStack(Items.SKELETON_SKULL);
         skull.set(DataComponentTypes.CUSTOM_NAME,
-            Text.literal("Skeleton Spawner"));
+                Text.literal("Skeleton Spawner"));
 
         ItemStack dropper = new ItemStack(Items.DROPPER);
         dropper.set(DataComponentTypes.CUSTOM_NAME,
-            Text.literal("Collect").formatted(Formatting.GREEN));
+                Text.literal("Collect").formatted(Formatting.GREEN));
 
         inv.setStack(48, gold);
         inv.setStack(49, skull);
         inv.setStack(50, dropper);
 
         mc.setScreen(new GenericContainerScreen(
-            new GenericContainerScreenHandler(
-                ScreenHandlerType.GENERIC_9X6,
-                0,
+                new GenericContainerScreenHandler(
+                        ScreenHandlerType.GENERIC_9X6,
+                        0,
+                        mc.player.getInventory(),
+                        inv,
+                        6
+                ),
                 mc.player.getInventory(),
-                inv,
-                6
-            ),
-            mc.player.getInventory(),
-            Text.literal(stored + " Skeleton Spawners")
+                Text.literal(stored + " Skeleton Spawners")
         ));
     }
 
@@ -118,17 +127,8 @@ public class FakeSpawner extends Module {
             double y = pos.getY() + 0.5;
             double z = pos.getZ() + 0.5;
 
-            mc.world.addParticle(
-                ParticleTypes.SMOKE,
-                x, y, z,
-                0, 0.02, 0
-            );
-
-            mc.world.addParticle(
-                ParticleTypes.FLAME,
-                x, y, z,
-                0, 0.02, 0
-            );
+            mc.world.addParticle(ParticleTypes.SMOKE, x, y, z, 0, 0.02, 0);
+            mc.world.addParticle(ParticleTypes.FLAME, x, y, z, 0, 0.02, 0);
 
             renderSkeleton(e, pos);
         }
@@ -141,9 +141,9 @@ public class FakeSpawner extends Module {
         SkeletonEntity s = new SkeletonEntity(EntityType.SKELETON, mc.world);
 
         s.setPosition(
-            pos.getX() + 0.5,
-            pos.getY() + 0.1,
-            pos.getZ() + 0.5
+                pos.getX() + 0.5,
+                pos.getY() + 0.1,
+                pos.getZ() + 0.5
         );
 
         s.setYaw((System.currentTimeMillis() / 10f) % 360);
@@ -152,15 +152,15 @@ public class FakeSpawner extends Module {
         var cp = cam.getPos();
 
         mc.getEntityRenderDispatcher().render(
-            s,
-            s.getX() - cp.x,
-            s.getY() - cp.y,
-            s.getZ() - cp.z,
-            s.getYaw(),
-            1.0f,
-            e.matrices,
-            mc.getBufferBuilders().getEntityVertexConsumers(),
-            15728880
+                s,
+                s.getX() - cp.x,
+                s.getY() - cp.y,
+                s.getZ() - cp.z,
+                s.getYaw(),
+                1.0f,
+                e.matrices,
+                mc.getBufferBuilders().getEntityVertexConsumers(),
+                15728880
         );
     }
 }
