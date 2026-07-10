@@ -35,7 +35,6 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new AutoElytraFly());
         Modules.get().add(new PearlCatch());
         Modules.get().add(new BetterESP());
-Modules.get().add(new FakeSpawner());
     }
 
     @Override
