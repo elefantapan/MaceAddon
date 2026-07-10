@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 public class AddonTemplate extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
     public static final Category CATEGORY = new Category("Mace");
+    public static final Category BASE_FIND = new Category("Base Finding");
     public static final HudGroup HUD_GROUP = new HudGroup("Mace");
 
     @Override
@@ -35,6 +36,7 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new AutoElytraFly());
         Modules.get().add(new PearlCatch());
         Modules.get().add(new BetterESP());
+        Modules.get().add(new SpoofDebug());
     }
 
     @Override
