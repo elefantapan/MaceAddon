@@ -44,15 +44,17 @@ public class SpoofDebug extends Module {
                 .sliderRange(-64, 100)
                 .build()
         );
+
+
         renderDistance = settings.getDefaultGroup().add(
-        new IntSetting.Builder()
-            .name("render-distance")
-            .description("Render distance to set to.")
-            .defaultValue(8)
-            .min(2)
-            .max(32)
-            .sliderRange(2, 32)
-            .build()
+            new IntSetting.Builder()
+                .name("render-distance")
+                .description("Render distance to set to.")
+                .defaultValue(8)
+                .min(2)
+                .max(32)
+                .sliderRange(2, 32)
+                .build()
         );
     }
 
@@ -131,7 +133,6 @@ public class SpoofDebug extends Module {
             return;
 
 
-        // Lower render distance
         mc.options.getViewDistance().setValue(2);
 
 
@@ -151,8 +152,7 @@ public class SpoofDebug extends Module {
             return;
 
 
-        // Restore render distance
-        mc.options.getViewDistance().setValue(mc.options.getViewDistance().setValue(renderDistance.get());
+        mc.options.getViewDistance().setValue(renderDistance.get());
 
 
         if (mc.worldRenderer != null)
