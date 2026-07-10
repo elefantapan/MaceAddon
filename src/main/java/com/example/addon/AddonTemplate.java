@@ -8,6 +8,7 @@ import com.example.addon.modules.PearlCatch;
 import com.example.addon.modules.AimAssist;
 import com.example.addon.modules.BetterESP;
 import com.example.addon.modules.SpoofDebug;
+import com.example.addon.modules.SpoofChunkFinder;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -37,6 +38,7 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new PearlCatch());
         Modules.get().add(new BetterESP());
         Modules.get().add(new SpoofDebug());
+        Modules.get().add(new SpoofChunkFinder());
     }
 
     @Override
