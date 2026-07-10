@@ -78,7 +78,7 @@ public class SpoofSpawnerFinder extends Module {
 				if(alertedChunks.contains(chunkPos)) continue;
 				for(int x = cx * 16; x < cx * 16 + 16; x++) {
 					for(int z = cz * 16; z < cz * 16 + 16; z++) {
-						for(int y = mc.world.getBottomY(); y < mc.world.getTopY(); y++) {
+						for(int y = mc.world.getBottomY(); y < mc.world.getBottomY() + mc.world.getHeight(); y++) {
 							BlockPos pos = new BlockPos(x, y, z);
 							if(mc.world.getBlockState(pos).isOf(Blocks.SPAWNER)) {
 								BlockEntity be = mc.world.getBlockEntity(pos);
