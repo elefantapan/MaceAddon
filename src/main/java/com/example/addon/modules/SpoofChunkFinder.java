@@ -14,6 +14,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.WorldChunk;
 import org.joml.Vector3d;
 import java.util.Map;
 import java.util.HashMap;
@@ -67,7 +68,7 @@ public class SpoofChunkFinder extends Module {
 		ChunkPos center = new ChunkPos(mc.player.getBlockPos());
 		for(int x = center.x - scanRadius.get(); x <= center.x + scanRadius.get(); x++) {
 			for(int z = center.z - scanRadius.get(); z <= center.z + scanRadius.get(); z++) {
-				var chunk = mc.world.getChunk(x, z, ChunkStatus.FULL, false);
+				WorldChunk chunk = (WorldChunk) mc.world.getChunk(x, z, ChunkStatus.FULL, false);
 				if(chunk == null) continue;
 				int storage = 0;
 				boolean spawner = false;
@@ -92,7 +93,7 @@ public class SpoofChunkFinder extends Module {
 	private void onRender3D(Render3DEvent event) {
 		MinecraftClient mc = MinecraftClient.getInstance();
 		if(mc.world == null) return;
-		int top = mc.world.getTopY(Heightmap.Type.WORLD_SURFACE);
+		int top = mc.world.getTopY(Heightmap.Type.WORLD_SURFACE, mc.player.getBlockPos().getX(), mc.player.getBlockPos().getZ());
 		for(ChunkPos pos: flaggedChunks) {
 			event.renderer.box(new net.minecraft.util.math.Box(pos.getStartX(), mc.world.getBottomY(), pos.getStartZ(), pos.getEndX() + 1, top, pos.getEndZ() + 1), chunkColor.get(), chunkColor.get(), fillChunk.get() ? ShapeMode.Both : ShapeMode.Lines, 0);
 		}
@@ -101,7 +102,7 @@ public class SpoofChunkFinder extends Module {
 	private void onRender2D(Render2DEvent event) {
 		if(!showLabel.get()) return;
 		MinecraftClient mc = MinecraftClient.getInstance();
-		int top = mc.world.getTopY(Heightmap.Type.WORLD_SURFACE);
+		int top = mc.world.getTopY(Heightmap.Type.WORLD_SURFACE, mc.player.getBlockPos().getX(), mc.player.getBlockPos().getZ());
 		for(Map.Entry < ChunkPos, String > entry: labels.entrySet()) {
 			ChunkPos pos = entry.getKey();
 			Vector3d vec = new Vector3d(pos.getStartX() + 8, top + 5, pos.getStartZ() + 8);
