@@ -42,6 +42,7 @@ public class AddonTemplate extends MeteorAddon {
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(CATEGORY);
+        Modules.registerCategory(BASE_FIND);
     }
 
     @Override
