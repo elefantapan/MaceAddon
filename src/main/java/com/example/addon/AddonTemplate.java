@@ -7,7 +7,6 @@ import com.example.addon.modules.AutoElytraFly;
 import com.example.addon.modules.PearlCatch;
 import com.example.addon.modules.AimAssist;
 import com.example.addon.modules.BetterESP;
-import com.example.addon.modules.FakeSpawner;
 import com.example.addon.modules.SpoofDebug;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.GithubRepo;
