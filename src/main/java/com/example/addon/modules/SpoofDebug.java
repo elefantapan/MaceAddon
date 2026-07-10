@@ -19,6 +19,7 @@ public class SpoofDebug extends Module {
     private final MinecraftClient mc = MinecraftClient.getInstance();
 
     private final Setting<Integer> triggerY;
+    private final Setting<Integer> renderDistance;
 
     private boolean triggered = false;
     private boolean sequenceActive = false;
@@ -42,6 +43,16 @@ public class SpoofDebug extends Module {
                 .max(320)
                 .sliderRange(-64, 100)
                 .build()
+        );
+        renderDistance = settings.getDefaultGroup().add(
+        new IntSetting.Builder()
+            .name("render-distance")
+            .description("Render distance to set to.")
+            .defaultValue(8)
+            .min(2)
+            .max(32)
+            .sliderRange(2, 32)
+            .build()
         );
     }
 
@@ -141,7 +152,7 @@ public class SpoofDebug extends Module {
 
 
         // Restore render distance
-        mc.options.getViewDistance().setValue(32);
+        mc.options.getViewDistance().setValue(mc.options.getViewDistance().setValue(renderDistance.get());
 
 
         if (mc.worldRenderer != null)
