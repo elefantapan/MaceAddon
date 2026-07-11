@@ -20,7 +20,6 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 
 import com.example.addon.commands.GCommand;
-import meteordevelopment.meteorclient.commands.CommandManager;
 
 import org.slf4j.Logger;
 
@@ -29,6 +28,7 @@ public class AddonTemplate extends MeteorAddon {
     public static final Category CATEGORY = new Category("Mace");
     public static final Category BASE_FIND = new Category("Base Finding");
     public static final HudGroup HUD_GROUP = new HudGroup("Mace");
+    public static final Category CREATIVE = new HudGroup("Creative");
 
     @Override
     public void onInitialize() {
@@ -46,13 +46,14 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new SpoofChunkFinder());
         Modules.get().add(new SpoofSpawnerFinder());
 
-        CommandManager.add(new GCommand());
+        Command.add(new GCommand());
     }
 
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(CATEGORY);
         Modules.registerCategory(BASE_FIND);
+        Modules.registerCategory(CREATIVE);
     }
 
     @Override
