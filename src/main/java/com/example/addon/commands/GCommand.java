@@ -2,35 +2,33 @@ package com.example.addon.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import meteordevelopment.meteorclient.commands.Command;
-import net.minecraft.client.multiplayer.ClientSuggestionProvider;
-import net.minecraft.world.level.GameType;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.network.ClientCommandSource;
+import net.minecraft.world.GameMode;
 
 public class GCommand extends Command {
 
     public GCommand() {
-        super("g", "Gamemode command.");
+        super("g", "Fake gamemode command.");
     }
 
     @Override
-    public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
+    public void build(LiteralArgumentBuilder<ClientCommandSource> builder) {
 
-        builder.then(literal("c").executes(ctx -> {
-            mc.gameMode.setLocalMode(GameType.CREATIVE);
+        builder.then(literal("c").executes(context -> {
+            MinecraftClient.getInstance()
+                .interactionManager
+                .setGameMode(GameMode.CREATIVE);
+
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("s").executes(ctx -> {
-            mc.gameMode.setLocalMode(GameType.SURVIVAL);
-            return SINGLE_SUCCESS;
-        }));
+        builder.then(literal("s").executes(context -> {
+            MinecraftClient.getInstance()
+                .interactionManager
+                .setGameMode(GameMode.SURVIVAL);
 
-        builder.then(literal("a").executes(ctx -> {
-            mc.gameMode.setLocalMode(GameType.ADVENTURE);
-            return SINGLE_SUCCESS;
-        }));
-
-        builder.then(literal("sp").executes(ctx -> {
-            mc.gameMode.setLocalMode(GameType.SPECTATOR);
             return SINGLE_SUCCESS;
         }));
     }
