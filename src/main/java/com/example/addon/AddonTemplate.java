@@ -18,6 +18,10 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+
+import com.example.addon.commands.GCommand;
+import meteordevelopment.meteorclient.commands.CommandManager;
+
 import org.slf4j.Logger;
 
 public class AddonTemplate extends MeteorAddon {
@@ -41,6 +45,8 @@ public class AddonTemplate extends MeteorAddon {
         Modules.get().add(new SpoofDebug());
         Modules.get().add(new SpoofChunkFinder());
         Modules.get().add(new SpoofSpawnerFinder());
+
+        CommandManager.add(new GCommand());
     }
 
     @Override
