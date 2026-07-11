@@ -10,6 +10,9 @@
   "contact": {
     "sources": "https://github.com/MeteorDevelopment/meteor-addon-template"
   },
+  "mixins": [
+    "fakecreative.mixins.json"
+  ],
   "icon": "assets/template/icon.png",
   "environment": "client",
   "entrypoints": {
