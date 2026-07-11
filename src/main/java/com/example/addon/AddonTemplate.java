@@ -28,7 +28,6 @@ public class AddonTemplate extends MeteorAddon {
     public static final Category CATEGORY = new Category("Mace");
     public static final Category BASE_FIND = new Category("Base Finding");
     public static final HudGroup HUD_GROUP = new HudGroup("Mace");
-    public static final Category CREATIVE = new HudGroup("Creative");
 
     @Override
     public void onInitialize() {
@@ -53,7 +52,6 @@ public class AddonTemplate extends MeteorAddon {
     public void onRegisterCategories() {
         Modules.registerCategory(CATEGORY);
         Modules.registerCategory(BASE_FIND);
-        Modules.registerCategory(CREATIVE);
     }
 
     @Override
